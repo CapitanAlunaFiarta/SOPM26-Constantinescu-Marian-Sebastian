@@ -1,1 +1,209 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinema NIII7 PRO Max</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div id="home-view" class="view active">
+        <header>
+            <h1 class="cinema-title">CINEMA NIII7</h1>
+            <p class="subtitle">Magia culorilor. Alege-ți filmul și rezervă-ți locul.</p>
+            <button id="my-tickets-btn" class="btn" style="margin-top: 20px; padding: 10px 20px; font-size: 1rem;">🎟️ Biletele Mele</button>
+        </header>
 
+        <div class="filters-container">
+            <select id="time-filter">
+                <option value="all">Toate orele</option>
+                <option value="12:00">12:00</option>
+                <option value="14:00">14:00</option>
+                <option value="16:30">16:30</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+                <option value="20:30">20:30</option>
+                <option value="21:30">21:30</option>
+                <option value="23:00">23:00</option>
+            </select>
+        </div>
+
+        <div class="movies-grid" id="movies-grid"></div>
+
+        <div class="location-section">
+            <h2>Locația Cinematografului NIII7</h2>
+            <p>Ne găsești la Corpul N, chiar lângă Modarom, Brașov.</p>
+            <div class="map-container">
+                <iframe src="https://maps.google.com/maps?q=Corpul%20N%20Universitatea%20Transilvania%20Brasov&t=&z=17&ie=UTF8&iwloc=&output=embed" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" title="Harta Locatie"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="my-tickets-view" class="view">
+        <button id="back-to-home-btn" class="back-btn">&#8592; Înapoi</button>
+        <h2 style="color: #00f2fe; margin-bottom: 30px;">Istoric Rezervări</h2>
+        <div id="tickets-history-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;">
+        </div>
+    </div>
+
+    <div id="movie-view" class="view">
+        <button id="back-btn" class="back-btn">&#8592; Înapoi la filme</button>
+        
+        <div class="movie-header">
+            <h1 id="movie-title">Titlu Film</h1>
+            <p id="movie-desc" class="movie-description">Descriere film...</p>
+        </div>
+
+        <div class="trailer-container">
+            <video id="movie-trailer" width="100%" controls autoplay>
+                Browser-ul tău nu suportă redarea video.
+            </video>
+        </div>
+
+        <div class="booking-options">
+            <div class="input-group">
+                <label>Alege Data</label>
+                <select id="booking-date"></select>
+            </div>
+            <div class="input-group">
+                <label>Alege Ora</label>
+                <select id="booking-time"></select>
+            </div>
+        </div>
+
+        <div class="cinema-section">
+            <h2>Selectare Locuri</h2>
+            <ul class="legend">
+                <li><div class="seat standard"></div> Standard (30 RON)</li>
+                <li><div class="seat premium"></div> Premium (45 RON)</li>
+                <li><div class="seat vip"></div> VIP (60 RON)</li>
+                <li><div class="seat occupied"></div> Ocupat</li>
+                <li><div class="seat selected"></div> Selectat</li>
+            </ul>
+            <div class="cinema-screen"></div>
+            <div class="seats-container" id="seats-container"></div>
+            <div class="info">
+                <span>Bilete selectate: <span id="count">0</span></span>
+                <span>Total Bilete: <span id="total-tickets">0</span> RON</span>
+            </div>
+            <button class="btn" id="continue-to-snacks-btn" disabled>Continuă (Snacks)</button>
+        </div>
+    </div>
+
+    <div class="modal" id="snacks-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="color: #00f2fe; margin-bottom: 20px;">Adaugă Snacks la comanda ta</h2>
+            
+            <div class="snacks-grid">
+                <div class="snack-item">
+                    <span>🍿 Popcorn Mare (25 RON)</span>
+                    <input type="number" id="snack-popcorn" min="0" value="0" class="snack-input">
+                </div>
+                <div class="snack-item">
+                    <span>🌮 Nachos cu Brânză (22 RON)</span>
+                    <input type="number" id="snack-nachos" min="0" value="0" class="snack-input">
+                </div>
+                <div class="snack-item">
+                    <span>🥤 Suc 0.5L (12 RON)</span>
+                    <input type="number" id="snack-soda" min="0" value="0" class="snack-input">
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: right; font-size: 1.2rem;">
+                Total curent: <strong id="snacks-total-display" style="color: #ff0844;">0 RON</strong>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" id="cancel-snacks-btn">Înapoi la locuri</button>
+                <button class="btn" id="proceed-to-pay-btn">Spre Plată</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="payment-modal">
+        <div class="modal-content" id="payment-form-content">
+            <h2>Finalizare Plată</h2>
+            
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <p>Bilete: <span id="summary-tickets">0</span> RON</p>
+                <p>Snacks: <span id="summary-snacks">0</span> RON</p>
+                <div class="input-group" style="margin-top: 10px;">
+                    <label>Cod Reducere (ex: STUDENT20)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="promo-input" placeholder="Introdu codul">
+                        <button id="apply-promo-btn" class="btn" style="padding: 10px; font-size: 1rem;">Aplică</button>
+                    </div>
+                </div>
+                <p style="font-size: 1.3em; margin-top: 10px;">Total de plată: <strong class="highlight-text"><span id="modal-total">0</span> RON</strong></p>
+            </div>
+            
+            <div class="input-group">
+                <label>Adresa de Email (pentru primire bilet)</label>
+                <input type="email" id="email-input" placeholder="nume@exemplu.ro" required>
+            </div>
+            <div class="input-group">
+                <label>Nume pe card</label>
+                <input type="text" id="card-name" placeholder="Ex: Constantinescu Marian">
+            </div>
+            <div class="input-group">
+                <label>Număr Card (Doar cifre, max 16)</label>
+                <input type="text" id="card-number" placeholder="0000 0000 0000 0000">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Expirare (LL/AA)</label>
+                    <input type="text" id="card-expiry" placeholder="12/28">
+                    <small id="expiry-error" style="color: #ff0844; display: none;">Dată invalidă!</small>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>CVV (3 cifre)</label>
+                    <input type="password" id="card-cvv" placeholder="123">
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" id="close-modal">Anulează</button>
+                <button class="btn" id="confirm-btn">Plătește</button>
+            </div>
+        </div>
+        
+        <div class="modal-content" id="ticket-success-content" style="display: none; max-width: 500px;">
+            <h2 style="color: #00f2fe;">Plată Confirmată!</h2>
+            <p style="margin-bottom: 15px;">Biletul a fost salvat și în "Biletele Mele".</p>
+            
+            <div id="ticket-to-download" class="ticket-card" style="background: linear-gradient(135deg, #160a2c, #081a3a); padding: 25px; border-radius: 15px; border: 2px dashed #00f2fe; text-align: left;">
+                <h2 style="color: #fff; border-bottom: 1px solid #4facfe; padding-bottom: 10px; margin-bottom: 15px;">CINEMA NIII7</h2>
+                <h3 id="ticket-movie-name" style="color: #00f2fe; font-size: 1.5rem;">Film</h3>
+                <p id="ticket-datetime" style="color: #ccc; margin-top: 5px;">Data | Ora</p>
+                <p id="ticket-seats-info" style="color: #ff0844; margin-top: 10px; font-weight: bold; font-size: 1.1rem;">Locuri: </p>
+                <p id="ticket-snacks-info" style="color: #a0a0b0; margin-top: 5px; font-size: 0.9rem;"></p>
+                
+                <div class="qr-container" style="background: #fff; padding: 10px; border-radius: 10px; display: inline-block; margin-top: 15px;">
+                    <img id="qr-code-img" src="" alt="QR Code Bilet" style="width: 150px; height: 150px; display: block;">
+                </div>
+            </div>
+            
+            <div class="modal-buttons" style="flex-direction: column;">
+                <button class="btn" id="download-ticket-btn" style="background: linear-gradient(45deg, #00b09b, #96c93d);">⬇️ Descarcă Biletul</button>
+                <button class="btn btn-cancel" id="close-success-btn">Închide</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-view" class="view">
+        <button id="admin-back-btn" class="back-btn">&#8592; Înapoi la site</button>
+        <h2 style="color: #ff0844; margin-bottom: 20px;">Panou Administrator</h2>
+        <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; width: 100%; max-width: 800px;">
+            <h3 style="color: #00f2fe; margin-bottom: 15px;">Vânzări Totale Locale</h3>
+            <p style="font-size: 1.5rem; margin-bottom: 20px;">Încasări: <span id="admin-revenue" style="color: #96c93d; font-weight: bold;">0</span> RON</p>
+            <h3 style="color: #ccc; margin-bottom: 10px;">Bilete Vândute:</h3>
+            <div id="admin-tickets-list" style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 10px;">
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

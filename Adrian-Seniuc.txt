@@ -1,0 +1,5 @@
+Nume: Adrian Costin Seniuc
+Grupa: 3LF631
+Laborator: 2
+Branch: Adrian-Seniuc
+Subiect: Lucrul colaborativ cu Git și alegerea unui API

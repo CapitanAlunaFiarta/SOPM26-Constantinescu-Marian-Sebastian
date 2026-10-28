@@ -113,69 +113,7 @@ function setupPushReminder(movieTitle, dateStr, timeStr) {
     };
 }
 
-// === 3. FUNCȚII AUXILIARE PENTRU GOOGLE & APPLE CALENDAR ===
-function parseDateTime(dateStr, timeStr) {
-    const monthsMap = {
-        "Ianuarie": 0, "Februarie": 1, "Martie": 2, "Aprilie": 3,
-        "Mai": 4, "Iunie": 5, "Iulie": 6, "August": 7,
-        "Septembrie": 8, "Octombrie": 9, "Noiembrie": 10, "Decembrie": 11
-    };
-    const parts = dateStr.split(', ')[1].split(' ');
-    const day = parseInt(parts[0], 10);
-    const month = monthsMap[parts[1]];
-    const year = parseInt(parts[2], 10);
-    const [hours, minutes] = timeStr.split(':').map(n => parseInt(n, 10));
-
-    const startDate = new Date(year, month, day, hours, minutes);
-    const endDate = new Date(startDate.getTime() + (2 * 60 + 30) * 60 * 1000); // Durată estimată 2h 30m
-    return { startDate, endDate };
-}
-
-function formatICSDate(date) {
-    return date.toISOString().replace(/-|:|\.\d\d\d/g, "");
-}
-
-function createGoogleCalendarUrl(title, desc, location, startDate, endDate) {
-    const fmtStart = formatICSDate(startDate);
-    const fmtEnd = formatICSDate(endDate);
-    const baseUrl = "https://calendar.google.com/calendar/render";
-    const params = new URLSearchParams({
-        action: "TEMPLATE",
-        text: `🎬 Cinema NIII7: ${title}`,
-        dates: `${fmtStart}/${fmtEnd}`,
-        details: desc,
-        location: location
-    });
-    return `${baseUrl}?${params.toString()}`;
-}
-
-function downloadICSFile(title, desc, location, startDate, endDate) {
-    const fmtStart = formatICSDate(startDate);
-    const fmtEnd = formatICSDate(endDate);
-    const icsContent = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "PRODID:-//Cinema NIII7 Brașov//RO",
-        "BEGIN:VEVENT",
-        `SUMMARY:🎬 Cinema NIII7: ${title}`,
-        `DESCRIPTION:${desc.replace(/\n/g, '\\n')}`,
-        `LOCATION:${location}`,
-        `DTSTART:${fmtStart}`,
-        `DTEND:${fmtEnd}`,
-        "END:VEVENT",
-        "END:VCALENDAR"
-    ].join("\r\n");
-
-    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = window.URL.createObjectURL(blob);
-    link.download = `Vizionare_${title.replace(/\s+/g, '_')}.ics`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// === 4. PERSPECTIVĂ ECRAN CINEMA 3D ===
+// === 3. PERSPECTIVĂ ECRAN CINEMA 3D ===
 function update3DScreenPerspective(r, c, isAi = false) {
     const dynScreen = document.getElementById('dynamic-screen');
     if (!dynScreen) return;
@@ -507,20 +445,7 @@ document.getElementById('card-expiry').addEventListener('input', function() {
     if (val.length === 2 && !val.includes('/')) val += '/';
     this.value = val.substring(0, 5);
     this.classList.remove('error');
-    document.getElementById('expiry-error').style.display = 'none';
 });
-
-function isExpiryValid(exp) {
-    if (!/^\d{2}\/\d{2}$/.test(exp)) return false;
-    let [m, y] = exp.split('/');
-    m = parseInt(m);
-    y = parseInt(y) + 2000;
-    if (m < 1 || m > 12) return false;
-    let d = baseSystemDate || new Date();
-    if (y < d.getFullYear()) return false;
-    if (y === d.getFullYear() && m < (d.getMonth() + 1)) return false;
-    return true;
-}
 
 // === FUNCȚII AUXILIARE PENTRU CALENDAR ===
 function parseDateTime(dateStr, timeStr) {
@@ -603,6 +528,17 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
     btn.innerText = "SE PROCESEAZĂ...";
     await new Promise(r => setTimeout(r, API_CONFIG.SIMULATE_STRIPE_DELAY));
 
+    // Calculăm corect textul pentru snacks-uri (corectat bug-ul anterior)
+    const popcornCount = parseInt(document.getElementById('snack-popcorn').value) || 0;
+    const nachosCount = parseInt(document.getElementById('snack-nachos').value) || 0;
+    const sodaCount = parseInt(document.getElementById('snack-soda').value) || 0;
+    
+    let snacksArr = [];
+    if (popcornCount > 0) snacksArr.push(`${popcornCount}x Popcorn`);
+    if (nachosCount > 0) snacksArr.push(`${nachosCount}x Nachos`);
+    if (sodaCount > 0) snacksArr.push(`${sodaCount}x Suc`);
+    const snacksText = snacksArr.length > 0 ? `Snacks: ${snacksArr.join(', ')}` : "Fără snacks-uri";
+
     const qrUrl = `${API_CONFIG.QR_API_URL}${encodeURIComponent("Cinema NIII7 - " + currentMovie.title)}`;
     document.getElementById('qr-code-img').src = qrUrl;
     document.getElementById('ticket-format-badge').innerText = `${fmt} PASS`;
@@ -617,14 +553,23 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
     const calendarDesc = `Bilet Cinema NIII7 Brașov\\nLocuri: ${selectedSeats}\\nFormat: ${fmt}\\nVizionare plăcută!`;
     const calendarLocation = "Cinema NIII7, Corpul N, Universitatea Transilvania, Bulevardul Eroilor, Brașov";
 
-    document.getElementById('add-google-calendar-btn').onclick = () => {
-        const gUrl = createGoogleCalendarUrl(calendarTitle, calendarDesc, calendarLocation, startDate, endDate);
-        window.open(gUrl, '_blank');
-    };
+    const gBtn = document.getElementById('add-google-calendar-btn');
+    if (gBtn) {
+        gBtn.onclick = () => {
+            const gUrl = createGoogleCalendarUrl(calendarTitle, calendarDesc, calendarLocation, startDate, endDate);
+            window.open(gUrl, '_blank');
+        };
+    }
 
-    document.getElementById('add-apple-calendar-btn').onclick = () => {
-        downloadICSFile(calendarTitle, calendarDesc, calendarLocation, startDate, endDate);
-    };
+    const aBtn = document.getElementById('add-apple-calendar-btn');
+    if (aBtn) {
+        aBtn.onclick = () => {
+            downloadICSFile(calendarTitle, calendarDesc, calendarLocation, startDate, endDate);
+        };
+    }
+
+    // === ACTIVARE REMINDER PUSH NOTIFICĂRI ===
+    setupPushReminder(currentMovie.title, date, time);
 
     saveTicketToLocal(`${currentMovie.title} [${fmt}]`, date, time, selectedSeats, qrUrl, finalTotal);
 

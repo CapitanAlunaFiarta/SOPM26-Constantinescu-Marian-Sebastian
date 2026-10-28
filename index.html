@@ -1,1 +1,510 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINEMA NIII7 — IMAX, 4DX & VIP Experience Brașov</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
 
+    <div id="fx-overlay" class="fx-overlay"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo" id="nav-logo">
+                <i class="fa-solid fa-film"></i> CINEMA <span>NIII7</span>
+            </div>
+            <div class="nav-badges">
+                <button class="format-pill active-pill" data-nav="home"><i class="fa-solid fa-clapperboard"></i> PROGRAM</button>
+                <button class="format-pill imax-pill" data-nav="imax">IMAX</button>
+                <button class="format-pill dx-pill" data-nav="4dx">4DX</button>
+                <button class="format-pill vip-pill" data-nav="vip">VIP LOUNGE</button>
+                <button class="format-pill wheel-pill" id="open-wheel-btn"><i class="fa-solid fa-dharmachakra fa-spin"></i> ROATA NOROCULUI (3% VIP)</button>
+            </div>
+            <div class="nav-actions">
+                <div class="weather-widget" id="time-api-widget" title="Dată sincronizată prin Time API">
+                    <i class="fa-regular fa-calendar-check"></i> <span id="live-date-label">Sincronizare API...</span>
+                </div>
+                <div class="weather-widget" id="weather-widget" title="Meteo Live Corpul N Brașov (Open-Meteo API)">
+                    <i class="fa-solid fa-cloud-sun"></i> <span id="weather-temp">--°C</span> Brașov
+                </div>
+                <select id="currency-switcher" class="currency-select" title="Conversie Live ExchangeRate-API">
+                    <option value="RON">RON</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="USD">USD ($)</option>
+                </select>
+                <button id="my-tickets-btn" class="nav-ticket-btn"><i class="fa-solid fa-ticket"></i> Biletele Mele</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="home-view" class="view active">
+        <div class="hero-banner">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <div class="hero-tags">
+                    <span class="tag-imax">EXCLUSIV ÎN IMAX LASER 3D</span>
+                    <span class="tag-4dx">SALA 4DX EXTREME</span>
+                    <span class="tag-live"><i class="fa-solid fa-circle-dot fa-beat"></i> SUNET 12.1 CANALE</span>
+                </div>
+                <h1 class="hero-title">DUNE: PART TWO</h1>
+                <p class="hero-subtitle">Trăiește experiența supremă în Corpul N Brașov. Cel mai mare ecran curbat, efecte ambientale 4DX și fotolii VIP din piele complet rabatabile.</p>
+                <div class="hero-btns">
+                    <button id="hero-book-btn" class="btn-cinema"><i class="fa-solid fa-play"></i> REZERVĂ BILETE ACUM</button>
+                    <button id="hero-imax-btn" class="btn-outline-cc"><i class="fa-solid fa-expand"></i> DESCOPERĂ SALA IMAX</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="genre-tabs-bar" id="genre-tabs">
+            <button class="genre-tab active" data-genre="all"><i class="fa-solid fa-border-all"></i> Toate Tipurile</button>
+            <button class="genre-tab" data-genre="Sci-Fi"><i class="fa-solid fa-user-astronaut"></i> Sci-Fi & Space</button>
+            <button class="genre-tab" data-genre="Acțiune"><i class="fa-solid fa-explosion"></i> Acțiune & Crime</button>
+            <button class="genre-tab" data-genre="Thriller"><i class="fa-solid fa-masks-theater"></i> Thriller Psihologic</button>
+            <button class="genre-tab" data-genre="Biografic"><i class="fa-solid fa-atom"></i> Biografic & Istoric</button>
+            <button class="genre-tab" data-genre="Animație"><i class="fa-solid fa-wand-magic-sparkles"></i> Animație Multivers</button>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-title">
+                <i class="fa-solid fa-fire"></i> FILTREAZĂ EXPERIENȚA CINEMA
+            </div>
+            <div class="filters-container">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="movie-search" placeholder="Caută film...">
+                </div>
+                <select id="format-filter">
+                    <option value="all">Toate Sălile (IMAX / 4DX / VIP)</option>
+                    <option value="IMAX">Sala IMAX 3D Laser</option>
+                    <option value="4DX">Sala 4DX Extreme Motion</option>
+                    <option value="VIP">Sala VIP Luxury Lounge</option>
+                </select>
+                <select id="time-filter">
+                    <option value="all">Toate Orele</option>
+                    <option value="12:00">12:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="16:30">16:30</option>
+                    <option value="18:00">18:00</option>
+                    <option value="19:00">19:00</option>
+                    <option value="20:30">20:30</option>
+                    <option value="21:30">21:30</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="movies-grid" id="movies-grid"></div>
+
+        <div class="location-section">
+            <div class="location-header">
+                <div>
+                    <h2><i class="fa-solid fa-map-location-dot"></i> LOCAȚIE CINEMA NIII7 BRAȘOV</h2>
+                    <p>Corpul N — Universitatea Transilvania (Lângă Modarom, Bulevardul Eroilor)</p>
+                </div>
+                <div class="external-links">
+                    <a href="https://www.google.com/maps/dir//Corpul+N+Universitatea+Transilvania+Brasov" target="_blank" class="ext-btn"><i class="fa-solid fa-diamond-turn-right"></i> Navighează cu Google Maps</a>
+                </div>
+            </div>
+            <div class="map-container">
+                <iframe src="https://maps.google.com/maps?q=Corpul%20N%20Universitatea%20Transilvania%20Brasov&t=&z=17&ie=UTF8&iwloc=&output=embed" width="100%" height="380" style="border:0;" allowfullscreen="" loading="lazy" title="Harta Locatie"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="imax-view" class="view">
+        <div class="exp-hero imax-hero">
+            <span class="tag-imax">TEHNOLOGIE NEXT-GEN</span>
+            <h1>EXPERIENȚA <span>IMAX® LASER</span></h1>
+            <p>Ecran gigant de 24 metri lățime, proiecție dublă 4K Laser și acustică calibrată cu laser în Corpul N.</p>
+        </div>
+
+        <div class="exp-grid">
+            <div class="exp-card">
+                <h3><i class="fa-solid fa-maximize"></i> COMPARATOR INTERACTIV DE IMAGINE</h3>
+                <p>În IMAX vezi cu până la 26% mai multă imagine față de un cinema standard. Apasă mai jos pentru a vedea diferența:</p>
+                <div class="aspect-demo" id="aspect-demo-box">
+                    <div class="aspect-bars top-bar">BANDĂ NEAGRĂ (CINEMA STANDARD 2.39:1)</div>
+                    <div class="aspect-image">
+                        <span>CADRU EXTINS IMAX 1.90:1</span>
+                    </div>
+                    <div class="aspect-bars bottom-bar">BANDĂ NEAGRĂ (CINEMA STANDARD 2.39:1)</div>
+                </div>
+                <div class="sim-controls">
+                    <button class="btn-cancel" id="btn-std-ratio">Mod Standard (2.39:1)</button>
+                    <button class="btn-cinema" id="btn-imax-ratio">Activează IMAX (1.90:1)</button>
+                </div>
+            </div>
+
+            <div class="exp-card">
+                <h3><i class="fa-solid fa-volume-high"></i> TEST ACUSTIC SUB-BASS IMAX 12.1</h3>
+                <p>Simte frecvențele joase generate în timp real prin <b>Web Audio API</b>. Pornește difuzoarele și apasă butonul!</p>
+                <div class="eq-visualizer" id="eq-visualizer">
+                    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+                    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+                    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+                </div>
+                <button class="btn-cinema" id="test-imax-sound-btn" style="width:100%; margin-top:20px;">
+                    <i class="fa-solid fa-wave-square"></i> DECLANȘEAZĂ TESTUL AUDIO IMAX
+                </button>
+                <div class="specs-list">
+                    <div><i class="fa-solid fa-check"></i> Putere Audio: <b>18.000W RMS</b></div>
+                    <div><i class="fa-solid fa-check"></i> Rezoluție: <b>Dual 4K Laser HDR</b></div>
+                    <div><i class="fa-solid fa-check"></i> Filme dedicate: <b>Dune: Part Two, Interstellar, Oppenheimer</b></div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-cinema" id="filter-imax-movies-btn" style="margin-top:30px;">VEZI DOAR FILMELE IMAX ÎN PROGRAM</button>
+    </div>
+
+    <div id="4dx-view" class="view">
+        <div class="exp-hero dx-hero">
+            <span class="tag-imax" style="background:#00d2ff;">CINEMA ABSOLUT 4D</span>
+            <h1>SIMULATORUL <span>4DX® EXTREME</span></h1>
+            <p>Nu doar privești filmul — ești în mijlocul acțiunii! Testează efectele sălii 4DX chiar acum pe ecranul tău:</p>
+        </div>
+
+        <div class="dx-simulator-box" id="dx-stage">
+            <div class="dx-seat-3d" id="dx-seat-model">
+                <div class="dx-headrest">4DX</div>
+                <div class="dx-backrest">
+                    <i class="fa-solid fa-wind" id="dx-icon-indicator"></i>
+                </div>
+                <div class="dx-cushion">SCAUN ACTIV #N7</div>
+                <div class="dx-base">PISTON HIDRAULIC</div>
+            </div>
+            <div class="dx-controls-panel">
+                <h3>PANOU DE COMANDĂ EFECTE 4DX</h3>
+                <p>Apasă pe butoane pentru a declanșa hidraulica și efectele speciale în pagină:</p>
+                <div class="dx-buttons-grid">
+                    <button class="dx-btn" data-fx="motion"><i class="fa-solid fa-arrows-up-down-left-right"></i> Vibrare & Roll Scaun</button>
+                    <button class="dx-btn" data-fx="wind"><i class="fa-solid fa-wind"></i> Furtună & Vânt (100 km/h)</button>
+                    <button class="dx-btn" data-fx="lightning"><i class="fa-solid fa-bolt"></i> Fulger Stroboscopic</button>
+                    <button class="dx-btn" data-fx="rain"><i class="fa-solid fa-droplet"></i> Jet de Apă & Ceață</button>
+                </div>
+                <div id="dx-status-text" class="dx-status">Sistem 4DX în așteptare. Selectează un efect!</div>
+            </div>
+        </div>
+        <button class="btn-cinema" id="filter-4dx-movies-btn" style="margin-top:30px;">VEZI FILMELE 4DX ÎN PROGRAM</button>
+    </div>
+
+    <div id="vip-view" class="view">
+        <div class="exp-hero vip-hero">
+            <span class="tag-imax" style="background:#ffb700;">ALL-INCLUSIVE LUXURY</span>
+            <h1>EXPERIENȚA <span>VIP LOUNGE</span></h1>
+            <p>Fotolii din piele naturală complet rabatabile electric și bufet nelimitat cu Nachos, Popcorn și băuturi înainte de film.</p>
+        </div>
+
+        <div class="exp-grid">
+            <div class="exp-card">
+                <h3><i class="fa-solid fa-couch"></i> SIMULATOR FOTOLIU ELECTRIC VIP</h3>
+                <p>Trage de cursor pentru a testa unghiul de rabatare al fotoliilor din ultimele rânduri ale sălii:</p>
+                <div class="recliner-stage">
+                    <div class="recliner-chair">
+                        <div class="chair-back" id="chair-back"></div>
+                        <div class="chair-seat"></div>
+                        <div class="chair-foot" id="chair-foot"></div>
+                    </div>
+                    <div class="angle-badge"><span id="angle-val">95</span>°</div>
+                </div>
+                <input type="range" id="recline-slider" min="95" max="160" value="95" style="width:100%; accent-color:#ff6600; cursor:pointer;">
+            </div>
+
+            <div class="exp-card">
+                <h3><i class="fa-solid fa-utensils"></i> MENIU VIP ALL-INCLUSIVE INCLUS ÎN BILET</h3>
+                <p>Biletul VIP îți oferă acces cu 45 de minute înainte de film în Lounge-ul privat din Corpul N:</p>
+                <div class="specs-list">
+                    <div><i class="fa-solid fa-star" style="color:#ffb700;"></i> <b>Popcorn & Nachos Nelimitat</b> (cu 3 tipuri de sosuri calde)</div>
+                    <div><i class="fa-solid fa-star" style="color:#ffb700;"></i> <b>Băuturi Răcoritoare & Cafea</b> fără limită</div>
+                    <div><i class="fa-solid fa-star" style="color:#ffb700;"></i> <b>Masă individuală la scaun</b> și încărcător Wireless pentru telefon</div>
+                    <div><i class="fa-solid fa-star" style="color:#ffb700;"></i> <b>Șansă 3% la Roata Norocului</b> pentru 2 Bilete Full VIP Gratis!</div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-cinema" id="filter-vip-movies-btn" style="margin-top:30px;">VEZI FILMELE VIP ÎN PROGRAM</button>
+    </div>
+
+    <div id="my-tickets-view" class="view">
+        <div class="section-top-bar">
+            <button id="back-to-home-btn" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Înapoi la Program</button>
+            <h2 class="section-heading"><i class="fa-solid fa-ticket"></i> BILETELE MELE REZERVATE</h2>
+        </div>
+        <div id="tickets-history-container" class="tickets-grid"></div>
+    </div>
+
+    <div id="movie-view" class="view">
+        <button id="back-btn" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Înapoi la Program</button>
+        
+        <div class="movie-showcase">
+            <div class="movie-header">
+                <div class="showcase-badges">
+                    <span class="badge-orange" id="detail-format">IMAX 3D</span>
+                    <span class="badge-dark" id="detail-genre">SCI-FI</span>
+                    <span class="badge-dark" id="detail-rating"><i class="fa-solid fa-star" style="color:#ffb700;"></i> 9.4 / 10</span>
+                    <span class="badge-gold">CORPUL N BRAȘOV</span>
+                </div>
+                <h1 id="movie-title">Titlu Film</h1>
+                <p id="movie-desc" class="movie-description">Descriere film...</p>
+                
+                <div class="movie-api-bar">
+                    <a id="imdb-link" href="#" target="_blank" class="api-pill imdb-btn"><i class="fa-brands fa-imdb"></i> Pagina IMDb</a>
+                    <a id="letterboxd-link" href="#" target="_blank" class="api-pill lb-btn"><i class="fa-solid fa-film"></i> Letterboxd</a>
+                    <button id="wiki-api-btn" class="api-pill wiki-btn"><i class="fa-solid fa-globe"></i> Date Live Wikipedia API</button>
+                </div>
+                <div id="wiki-api-box" class="wiki-box" style="display:none;"></div>
+            </div>
+
+            <div class="trailer-container">
+                <video id="movie-trailer" width="100%" controls autoplay>
+                    Browser-ul tău nu suportă redarea video.
+                </video>
+            </div>
+        </div>
+
+        <div class="booking-options">
+            <div class="input-group">
+                <label><i class="fa-solid fa-sliders"></i> ALEGE FORMATUL & SALA</label>
+                <select id="booking-format">
+                    <option value="IMAX">Sala IMAX 3D Laser (+0 RON)</option>
+                    <option value="4DX">Sala 4DX Extreme Motion (+10 RON/loc)</option>
+                    <option value="VIP">Sala VIP Luxury All-Inclusive (+15 RON/loc)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label><i class="fa-regular fa-calendar-days"></i> DATA VIITOARE (TIME API)</label>
+                <select id="booking-date"></select>
+            </div>
+            <div class="input-group">
+                <label><i class="fa-regular fa-clock"></i> ORA PROIECȚIEI</label>
+                <select id="booking-time"></select>
+            </div>
+        </div>
+
+        <div class="cinema-section">
+            <div class="auditorium-header">
+                <h2 id="auditorium-title">SALA IMAX LASER — SELECTARE LOCURI</h2>
+                <p id="perspective-hint"><i class="fa-solid fa-eye"></i> Click pe un loc sau folosește AI-ul pentru a găsi poziția ideală!</p>
+                <button id="ai-sweetspot-btn" class="btn-ai-sweetspot">
+                    ✨ Alege Locurile Ideale (AI Sweet-Spot)
+                </button>
+            </div>
+
+            <ul class="legend">
+                <li><div class="seat standard"></div> Standard (<span class="price-convert" id="leg-std" data-ron="30">30 RON</span>)</li>
+                <li><div class="seat premium"></div> Premium (<span class="price-convert" id="leg-prm" data-ron="45">45 RON</span>)</li>
+                <li><div class="seat vip"></div> VIP Ultra (<span class="price-convert" id="leg-vip" data-ron="60">60 RON</span>)</li>
+                <li><div class="seat occupied"></div> Ocupat</li>
+                <li><div class="seat selected"></div> Locul Tău</li>
+            </ul>
+
+            <div class="screen-wrapper" id="screen-wrapper-3d">
+                <div class="cinema-screen" id="dynamic-screen"></div>
+                <div class="screen-text" id="screen-perspective-label">ECRAN IMAX LASER (PERSPECTIVĂ CENTRALĂ)</div>
+            </div>
+
+            <div class="seats-container" id="seats-container"></div>
+
+            <div class="booking-bar">
+                <div class="info">
+                    <div class="info-item">
+                        <span class="info-label">LOCURI SELECTATE</span>
+                        <span class="info-val" id="count">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">TOTAL BILETE</span>
+                        <span class="info-val"><span id="total-tickets">0</span> <small class="curr-label">RON</small></span>
+                    </div>
+                </div>
+                <button class="btn-cinema" id="continue-to-snacks-btn" disabled>CONTINUĂ SPRE SNACKS <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="wheel-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header-cc">
+                <h2><i class="fa-solid fa-gift"></i> ROATA NOROCULUI NIII7</h2>
+                <p>Ai <b>3% șansă</b> să câștigi <b>2 BILETE FULL VIP GRATIS</b>! (Sfat concurs: apasă tasta <b>G</b>)</p>
+            </div>
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer">▼</div>
+                <div class="wheel-circle" id="wheel-circle">
+                    <div class="wheel-seg seg-1">STUDENT20</div>
+                    <div class="wheel-seg seg-2">CORPULN</div>
+                    <div class="wheel-seg seg-3">VIP15</div>
+                    <div class="wheel-seg seg-4">👑 2x VIP FREE</div>
+                </div>
+            </div>
+            <p id="wheel-result" style="font-weight:800; color:#ffb700; min-height:28px; margin-top:18px; font-size:1.05rem;"></p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" id="close-wheel-btn">Închide</button>
+                <button class="btn-cinema" id="spin-wheel-btn">ÎNVÂRTE ROATA!</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="snacks-modal">
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="modal-header-cc">
+                <h2><i class="fa-solid fa-bowl-food"></i> CINEMA BAR & SNACKS</h2>
+                <p>Adaugă gustări proaspete la rezervarea ta</p>
+            </div>
+            
+            <div class="snacks-grid">
+                <div class="snack-item">
+                    <div class="snack-details">
+                        <span class="snack-emoji">🍿</span>
+                        <div>
+                            <h4>Meniu Popcorn Mare</h4>
+                            <small>Popcorn cald cu unt (25 RON)</small>
+                        </div>
+                    </div>
+                    <div class="snack-price-ctrl">
+                        <input type="number" id="snack-popcorn" min="0" value="0" class="snack-input">
+                    </div>
+                </div>
+                <div class="snack-item">
+                    <div class="snack-details">
+                        <span class="snack-emoji">🌮</span>
+                        <div>
+                            <h4>Nachos Jalapeño & Cheese</h4>
+                            <small>Cu sos cald de brânză și salsa (22 RON)</small>
+                        </div>
+                    </div>
+                    <div class="snack-price-ctrl">
+                        <input type="number" id="snack-nachos" min="0" value="0" class="snack-input">
+                    </div>
+                </div>
+                <div class="snack-item">
+                    <div class="snack-details">
+                        <span class="snack-emoji">🥤</span>
+                        <div>
+                            <h4>Băutură Răcoritoare 0.5L</h4>
+                            <small>Cola / Fanta / Sprite (12 RON)</small>
+                        </div>
+                    </div>
+                    <div class="snack-price-ctrl">
+                        <input type="number" id="snack-soda" min="0" value="0" class="snack-input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="snacks-summary">
+                Total Snacks: <strong id="snacks-total-display">0 RON</strong>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-cancel" id="cancel-snacks-btn">Înapoi la Sală</button>
+                <button class="btn-cinema" id="proceed-to-pay-btn">MERGI LA PLATĂ <i class="fa-solid fa-credit-card"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="payment-modal">
+        <div class="modal-content" id="payment-form-content">
+            <div class="modal-header-cc">
+                <h2><i class="fa-solid fa-shield-halved"></i> FINALIZARE PLATĂ</h2>
+            </div>
+            
+            <div class="order-summary-box">
+                <div class="summary-line"><span>Bilete:</span> <strong><span id="summary-tickets">0</span> RON</strong></div>
+                <div class="summary-line"><span>Bar & Snacks:</span> <strong><span id="summary-snacks">0</span> RON</strong></div>
+                
+                <div class="promo-box">
+                    <input type="text" id="promo-input" placeholder="Cod (STUDENT20 / FREEVIP2)">
+                    <button id="apply-promo-btn" class="btn-promo">APLICĂ</button>
+                </div>
+
+                <div class="summary-total">
+                    <span>TOTAL DE PLATĂ:</span>
+                    <strong class="highlight-text"><span id="modal-total">0</span> RON</strong>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Adresa de Email (pentru livrare bilet + QR)</label>
+                <input type="email" id="email-input" placeholder="nume@student.unitbv.ro" required>
+            </div>
+            <div class="input-group">
+                <label>Numele de pe card</label>
+                <input type="text" id="card-name" placeholder="Ex: POPESCU ION">
+            </div>
+            <div class="input-group">
+                <label>Număr Card (Doar cifre, fix 16)</label>
+                <input type="text" id="card-number" placeholder="0000 0000 0000 0000">
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Expirare (LL/AA - dată viitoare)</label>
+                    <input type="text" id="card-expiry" placeholder="12/28">
+                    <small id="expiry-error" style="color: #ff3b30; display: none; font-size: 0.8em; margin-top: 4px;">Dată expirată față de data curentă!</small>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>CVV (3 cifre)</label>
+                    <input type="password" id="card-cvv" placeholder="123">
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-cancel" id="close-modal">Anulează</button>
+                <button class="btn-cinema" id="confirm-btn">CONFIRMĂ PLATA</button>
+            </div>
+        </div>
+        
+        <div class="modal-content" id="ticket-success-content" style="display: none; max-width: 520px;">
+            <div class="modal-header-cc">
+                <h2 style="color: #2ecc71;"><i class="fa-solid fa-circle-check"></i> BILET EMIS CU SUCCES!</h2>
+                <p>Scanează codul QR cu telefonul pentru a testa pagina de validare</p>
+            </div>
+            
+            <div id="ticket-to-download" class="vip-ticket-pass">
+                <div class="ticket-top">
+                    <span class="ticket-brand">CINEMA <b>NIII7</b> BRAȘOV</span>
+                    <span class="ticket-type" id="ticket-format-badge">VIP PASS</span>
+                </div>
+                <div class="ticket-body">
+                    <h3 id="ticket-movie-name">DUNE: PART TWO</h3>
+                    <p id="ticket-datetime" class="ticket-meta">Data | Ora</p>
+                    <div class="ticket-seats-box">
+                        <span id="ticket-seats-info">Locuri: R4L5</span>
+                    </div>
+                    <p id="ticket-snacks-info" class="ticket-snacks"></p>
+                </div>
+                <div class="ticket-divider"></div>
+                <div class="ticket-bottom">
+                    <div class="qr-container">
+                        <img id="qr-code-img" src="" alt="QR Code Bilet" crossorigin="anonymous">
+                    </div>
+                    <span class="scan-hint">CORPUL N — ACCES PE BAZĂ DE SCANARE QR</span>
+                </div>
+            </div>
+            
+            <div class="modal-buttons" style="flex-direction: column; gap: 12px;">
+                <button class="btn-cinema" id="download-ticket-btn"><i class="fa-solid fa-download"></i> DESCARCĂ BILETUL CA POZĂ (.PNG)</button>
+                <button class="btn-cancel" id="close-success-btn">Închide</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-view" class="view">
+        <button id="admin-back-btn" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Înapoi la Cinema</button>
+        <div class="admin-dashboard">
+            <h2><i class="fa-solid fa-chart-line"></i> PANOU ADMINISTRATOR — CINEMA NIII7</h2>
+            <div class="admin-stats">
+                <span>ÎNCASĂRI TOTALE:</span>
+                <strong><span id="admin-revenue">0</span> RON</strong>
+            </div>
+            <h3>Istoric Bilete Vândute:</h3>
+            <div id="admin-tickets-list" class="admin-list"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

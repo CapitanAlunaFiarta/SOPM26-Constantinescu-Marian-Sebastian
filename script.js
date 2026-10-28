@@ -13,6 +13,7 @@ const API_CONFIG = {
 let availableDates = [];
 let baseSystemDate = new Date();
 
+// Lista de filme cu posterele corectate de pe TMDB
 const movies = [
     { id: 1, title: "Dune: Part Two", genre: "Sci-Fi", wiki: "Dune:_Part_Two", imdb: "https://www.imdb.com/title/tt15239678/", format: "IMAX", rating: "9.4", desc: "Paul Atreides se unește cu Chani și fremenii pe calea răzbunării împotriva conspiratorilor care i-au distrus familia.", trailer: "dune.mp4", poster: "dune.jpg", times: ["14:00", "16:30", "19:00", "21:30"] },
     { id: 2, title: "Interstellar", genre: "Sci-Fi", wiki: "Interstellar_(film)", imdb: "https://www.imdb.com/title/tt0816692/", format: "IMAX", rating: "9.2", desc: "O echipă de exploratori călătorește printr-o gaură de vierme în spațiu pentru a asigura supraviețuirea umanității.", trailer: "interstellar.mp4", poster: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", times: ["12:00", "16:30", "18:00", "20:30"] },
@@ -52,6 +53,149 @@ let currentCurrency = "RON";
 let forceVipJackpot = false;
 let wheelRotation = 0;
 
+// === 1. LOGICĂ DARK / LIGHT MODE ===
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+const themeIcon = document.getElementById('theme-icon');
+const themeLabel = document.getElementById('theme-label');
+
+if (themeToggleBtn) {
+    const savedTheme = localStorage.getItem('cinema_theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        if (themeIcon) themeIcon.className = "fa-solid fa-sun";
+        if (themeLabel) themeLabel.innerText = "Light";
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-mode');
+        const isLight = document.body.classList.contains('light-mode');
+        if (isLight) {
+            if (themeIcon) themeIcon.className = "fa-solid fa-sun";
+            if (themeLabel) themeLabel.innerText = "Light";
+            localStorage.setItem('cinema_theme', 'light');
+        } else {
+            if (themeIcon) themeIcon.className = "fa-solid fa-moon";
+            if (themeLabel) themeLabel.innerText = "Dark";
+            localStorage.setItem('cinema_theme', 'dark');
+        }
+    });
+}
+
+// === 2. LOGICĂ NOTIFICĂRI PUSH / REMINDER ===
+function setupPushReminder(movieTitle, dateStr, timeStr) {
+    const reminderBtn = document.getElementById('enable-reminder-btn');
+    if (!reminderBtn) return;
+
+    reminderBtn.onclick = async () => {
+        if (!("Notification" in window)) {
+            alert("Browserul tău nu suportă notificări push.");
+            return;
+        }
+        let permission = Notification.permission;
+        if (permission === "default") {
+            permission = await Notification.requestPermission();
+        }
+        if (permission === "granted") {
+            alert("🔔 Reminder setat cu succes! Vei primi o notificare pe ecran înainte de începerea filmului.");
+            reminderBtn.innerHTML = '<i class="fa-solid fa-check" style="color:#2ecc71;"></i> Reminder Setat';
+            reminderBtn.style.borderColor = "#2ecc71";
+            reminderBtn.disabled = true;
+
+            setTimeout(() => {
+                new Notification("🎬 Cinema NIII7 Reminder", {
+                    body: `Filmul "${movieTitle}" începe la ora ${timeStr} (${dateStr}). Pregătește-te de plecare spre Corpul N!`,
+                    icon: "https://img.icons8.com/color/96/clapperboard.png"
+                });
+            }, 8000); // Test demonstrativ după 8 secunde
+        } else {
+            alert("Pentru a primi remindere, trebuie să permiți notificările din browser.");
+        }
+    };
+}
+
+// === 3. FUNCȚII AUXILIARE PENTRU GOOGLE & APPLE CALENDAR ===
+function parseDateTime(dateStr, timeStr) {
+    const monthsMap = {
+        "Ianuarie": 0, "Februarie": 1, "Martie": 2, "Aprilie": 3,
+        "Mai": 4, "Iunie": 5, "Iulie": 6, "August": 7,
+        "Septembrie": 8, "Octombrie": 9, "Noiembrie": 10, "Decembrie": 11
+    };
+    const parts = dateStr.split(', ')[1].split(' ');
+    const day = parseInt(parts[0], 10);
+    const month = monthsMap[parts[1]];
+    const year = parseInt(parts[2], 10);
+    const [hours, minutes] = timeStr.split(':').map(n => parseInt(n, 10));
+
+    const startDate = new Date(year, month, day, hours, minutes);
+    const endDate = new Date(startDate.getTime() + (2 * 60 + 30) * 60 * 1000); // Durată estimată 2h 30m
+    return { startDate, endDate };
+}
+
+function formatICSDate(date) {
+    return date.toISOString().replace(/-|:|\.\d\d\d/g, "");
+}
+
+function createGoogleCalendarUrl(title, desc, location, startDate, endDate) {
+    const fmtStart = formatICSDate(startDate);
+    const fmtEnd = formatICSDate(endDate);
+    const baseUrl = "https://calendar.google.com/calendar/render";
+    const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: `🎬 Cinema NIII7: ${title}`,
+        dates: `${fmtStart}/${fmtEnd}`,
+        details: desc,
+        location: location
+    });
+    return `${baseUrl}?${params.toString()}`;
+}
+
+function downloadICSFile(title, desc, location, startDate, endDate) {
+    const fmtStart = formatICSDate(startDate);
+    const fmtEnd = formatICSDate(endDate);
+    const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Cinema NIII7 Brașov//RO",
+        "BEGIN:VEVENT",
+        `SUMMARY:🎬 Cinema NIII7: ${title}`,
+        `DESCRIPTION:${desc.replace(/\n/g, '\\n')}`,
+        `LOCATION:${location}`,
+        `DTSTART:${fmtStart}`,
+        `DTEND:${fmtEnd}`,
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `Vizionare_${title.replace(/\s+/g, '_')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// === 4. PERSPECTIVĂ ECRAN CINEMA 3D ===
+function update3DScreenPerspective(r, c, isAi = false) {
+    const dynScreen = document.getElementById('dynamic-screen');
+    if (!dynScreen) return;
+    
+    const rotX = -50 + (r * 4);
+    const rotY = (6.5 - c) * 2.8;
+    const scale = 1.12 - (r * 0.03);
+    dynScreen.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${scale})`;
+    
+    const label = document.getElementById('screen-perspective-label');
+    if (label) {
+        if (isAi) {
+            label.innerText = `✨ AI SWEET-SPOT ACTIVAT: R${r}L${c} & R${r}L${c+1} (ACUSTICĂ IMAX 99.8%)`;
+        } else {
+            label.innerText = `UNGHI VIZIONARE SIMULAT DE PE LOCUL R${r}L${c}`;
+        }
+    }
+}
+
+// Generare date calendar viitoare
 function buildFutureDates(refDate) {
     const months = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
     const days = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă"];
@@ -59,14 +203,10 @@ function buildFutureDates(refDate) {
     for (let i = 1; i <= 4; i++) {
         const future = new Date(refDate);
         future.setDate(refDate.getDate() + i);
-        const dayName = days[future.getDay()];
-        const dayNum = future.getDate();
-        const monthName = months[future.getMonth()];
-        const yearNum = future.getFullYear();
-        availableDates.push(`${dayName}, ${dayNum} ${monthName} ${yearNum}`);
+        availableDates.push(`${days[future.getDay()]}, ${future.getDate()} ${months[future.getMonth()]} ${future.getFullYear()}`);
     }
-    const todayStr = `${refDate.getDate()} ${months[refDate.getMonth()]} ${refDate.getFullYear()}`;
-    document.getElementById('live-date-label').innerText = `Azi: ${todayStr}`;
+    const label = document.getElementById('live-date-label');
+    if (label) label.innerText = `Azi: ${refDate.getDate()} ${months[refDate.getMonth()]} ${refDate.getFullYear()}`;
 }
 
 async function initLiveAPIs() {
@@ -78,38 +218,30 @@ async function initLiveAPIs() {
             baseSystemDate = new Date(tData.datetime);
             buildFutureDates(baseSystemDate);
         }
-    } catch (e) {
-        baseSystemDate = new Date();
-        buildFutureDates(baseSystemDate);
-    }
+    } catch (e) {}
     try {
         const wRes = await fetch(API_CONFIG.WEATHER_API);
         const wData = await wRes.json();
         if (wData.current_weather) {
-            document.getElementById('weather-temp').innerText = `${Math.round(wData.current_weather.temperature)}°C`;
+            const wEl = document.getElementById('weather-temp');
+            if (wEl) wEl.innerText = `${Math.round(wData.current_weather.temperature)}°C`;
         }
     } catch (e) {
-        document.getElementById('weather-temp').innerText = "16°C";
+        const wEl = document.getElementById('weather-temp');
+        if (wEl) wEl.innerText = "16°C";
     }
-    try {
-        const cRes = await fetch(API_CONFIG.CURRENCY_API);
-        const cData = await cRes.json();
-        if (cData && cData.rates) {
-            exchangeRates.EUR = cData.rates.EUR || 0.20;
-            exchangeRates.USD = cData.rates.USD || 0.22;
-        }
-    } catch (e) {}
 }
 
 function updateLegendPrices() {
     const fmt = bookingFormatSelect.value;
     const surcharge = fmt === '4DX' ? 10 : (fmt === 'VIP' ? 15 : 0);
-    const stdRon = 30 + surcharge;
-    const prmRon = 45 + surcharge;
-    const vipRon = 60 + surcharge;
-    document.getElementById('leg-std').dataset.ron = stdRon;
-    document.getElementById('leg-prm').dataset.ron = prmRon;
-    document.getElementById('leg-vip').dataset.ron = vipRon;
+    const legStd = document.getElementById('leg-std');
+    const legPrm = document.getElementById('leg-prm');
+    const legVip = document.getElementById('leg-vip');
+    if (legStd) legStd.dataset.ron = 30 + surcharge;
+    if (legPrm) legPrm.dataset.ron = 45 + surcharge;
+    if (legVip) legVip.dataset.ron = 60 + surcharge;
+    
     const rate = exchangeRates[currentCurrency];
     document.querySelectorAll('.price-convert').forEach(el => {
         const ron = parseFloat(el.dataset.ron);
@@ -134,7 +266,7 @@ document.querySelectorAll('[data-nav]').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('[data-nav]').forEach(b => b.classList.remove('active-pill'));
         btn.classList.add('active-pill');
-        movieTrailerEl.pause();
+        if (movieTrailerEl) movieTrailerEl.pause();
         const target = btn.dataset.nav;
         if (target === 'home') showView(homeView);
         if (target === 'imax') showView(imaxView);
@@ -143,35 +275,7 @@ document.querySelectorAll('[data-nav]').forEach(btn => {
     });
 });
 
-document.getElementById('filter-imax-movies-btn').addEventListener('click', () => {
-    document.getElementById('format-filter').value = 'IMAX';
-    document.querySelector('[data-nav="home"]').click();
-    renderMovies();
-});
-
-document.getElementById('filter-4dx-movies-btn').addEventListener('click', () => {
-    document.getElementById('format-filter').value = '4DX';
-    document.querySelector('[data-nav="home"]').click();
-    renderMovies();
-});
-
-document.getElementById('filter-vip-movies-btn').addEventListener('click', () => {
-    document.getElementById('format-filter').value = 'VIP';
-    document.querySelector('[data-nav="home"]').click();
-    renderMovies();
-});
-
 document.getElementById('nav-logo').addEventListener('click', () => document.querySelector('[data-nav="home"]').click());
-document.getElementById('hero-imax-btn').addEventListener('click', () => document.querySelector('[data-nav="imax"]').click());
-
-document.querySelectorAll('.genre-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.genre-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        selectedGenre = tab.dataset.genre;
-        renderMovies();
-    });
-});
 
 function openMoviePage(movie) {
     currentMovie = movie;
@@ -186,9 +290,10 @@ function openMoviePage(movie) {
         document.getElementById('detail-rating').innerHTML = `<i class="fa-solid fa-star" style="color:#ffb700;"></i> ${movie.rating} / 10`;
         document.getElementById('imdb-link').href = movie.imdb;
         document.getElementById('letterboxd-link').href = `https://letterboxd.com/search/${encodeURIComponent(movie.title)}/`;
-        document.getElementById('wiki-api-box').style.display = 'none';
-        movieTrailerEl.src = movie.trailer;
-        movieTrailerEl.play().catch(e => e);
+        if (movieTrailerEl) {
+            movieTrailerEl.src = movie.trailer;
+            movieTrailerEl.play().catch(e => e);
+        }
         populateBookingOptions(movie);
         applyAuditoriumFormatStyle();
         generateSeats();
@@ -202,253 +307,26 @@ function applyAuditoriumFormatStyle() {
     const titleEl = document.getElementById('auditorium-title');
     const screenLabel = document.getElementById('screen-perspective-label');
     if (fmt === 'IMAX') {
-        titleEl.innerText = "SALA IMAX LASER 3D — SELECTARE LOCURI";
-        screenLabel.innerText = "ECRAN GIGANT IMAX 24M (PERSPECTIVĂ CENTRALĂ)";
+        if (titleEl) titleEl.innerText = "SALA IMAX LASER 3D — SELECTARE LOCURI";
+        if (screenLabel) screenLabel.innerText = "ECRAN GIGANT IMAX 24M (PERSPECTIVĂ CENTRALĂ)";
     } else if (fmt === '4DX') {
-        titleEl.innerText = "SALA 4DX EXTREME MOTION — SELECTARE LOCURI";
-        screenLabel.innerText = "ECRAN 4DX + EFECTE VÂNT, APĂ & MIȘCARE HIDRAULICĂ";
+        if (titleEl) titleEl.innerText = "SALA 4DX EXTREME MOTION — SELECTARE LOCURI";
+        if (screenLabel) screenLabel.innerText = "ECRAN 4DX + EFECTE VÂNT & APĂ";
     } else {
-        titleEl.innerText = "SALA VIP LUXURY LOUNGE — SELECTARE LOCURI";
-        screenLabel.innerText = "ECRAN VIP + BUFET POPCORN & NACHOS NELIMITAT INCLUS";
+        if (titleEl) titleEl.innerText = "SALA VIP LUXURY LOUNGE — SELECTARE LOCURI";
+        if (screenLabel) screenLabel.innerText = "ECRAN VIP + BUFET NELIMITAT";
     }
     updateLegendPrices();
 }
 
-bookingFormatSelect.addEventListener('change', () => {
-    applyAuditoriumFormatStyle();
-    generateSeats();
-    resetSelection();
-});
-
-document.getElementById('wiki-api-btn').addEventListener('click', async () => {
-    const box = document.getElementById('wiki-api-box');
-    box.style.display = 'block';
-    box.innerHTML = "Se interoghează Wikipedia REST API...";
-    try {
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${currentMovie.wiki}`);
-        const data = await res.json();
-        box.innerHTML = `<strong><i class="fa-brands fa-wikipedia-w"></i> Wikipedia Live API:</strong> ${data.extract || currentMovie.desc}`;
-    } catch (e) {
-        box.innerHTML = `<strong>Info Live:</strong> ${currentMovie.desc}`;
-    }
-});
+bookingFormatSelect.addEventListener('change', () => { applyAuditoriumFormatStyle(); generateSeats(); resetSelection(); });
 
 document.getElementById('hero-book-btn').addEventListener('click', () => openMoviePage(movies[0]));
-document.getElementById('back-btn').addEventListener('click', () => { showView(homeView); movieTrailerEl.pause(); });
+document.getElementById('back-btn').addEventListener('click', () => { showView(homeView); if (movieTrailerEl) movieTrailerEl.pause(); });
 document.getElementById('my-tickets-btn').addEventListener('click', () => { showView(ticketsView); renderMyTickets(); });
 document.getElementById('back-to-home-btn').addEventListener('click', () => showView(homeView));
 
-window.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
-        showView(adminView);
-        renderAdminPanel();
-    }
-    if (e.key === 'g' || e.key === 'G') {
-        forceVipJackpot = true;
-        const wheelModal = document.getElementById('wheel-modal');
-        if (wheelModal.style.display === 'flex') {
-            spinWheel(true);
-        }
-    }
-});
-
-document.getElementById('admin-back-btn').addEventListener('click', () => showView(homeView));
-
-function renderMovies() {
-    const selectedTime = document.getElementById('time-filter').value;
-    const selectedFormat = document.getElementById('format-filter').value;
-    const searchQuery = document.getElementById('movie-search').value.toLowerCase();
-    moviesGrid.innerHTML = '';
-    movies.forEach(movie => {
-        const matchTime = selectedTime === 'all' || movie.times.includes(selectedTime);
-        const matchFormat = selectedFormat === 'all' || movie.format === selectedFormat;
-        const matchGenre = selectedGenre === 'all' || movie.genre === selectedGenre;
-        const matchSearch = movie.title.toLowerCase().includes(searchQuery);
-        if (matchTime && matchFormat && matchGenre && matchSearch) {
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            let timeBadgesHtml = movie.times.map(t => `<span class="time-badge">${t}</span>`).join('');
-            card.innerHTML = `
-                <span class="card-format-tag">${movie.format}</span>
-                <span class="card-genre-tag">${movie.genre}</span>
-                <span class="card-rating-tag">★ ${movie.rating}</span>
-                <img src="${movie.poster}" onerror="this.src='https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2JGjjcNs3.jpg'" alt="${movie.title}" loading="lazy">
-                <div class="movie-info">
-                    <h3>${movie.title}</h3>
-                    <div class="time-badges">${timeBadgesHtml}</div>
-                </div>
-            `;
-            card.addEventListener('click', () => openMoviePage(movie));
-            moviesGrid.appendChild(card);
-        }
-    });
-}
-
-document.getElementById('time-filter').addEventListener('change', renderMovies);
-document.getElementById('format-filter').addEventListener('change', renderMovies);
-document.getElementById('movie-search').addEventListener('input', renderMovies);
-
-document.getElementById('btn-imax-ratio').addEventListener('click', () => {
-    document.getElementById('aspect-demo-box').classList.add('imax-expanded');
-});
-document.getElementById('btn-std-ratio').addEventListener('click', () => {
-    document.getElementById('aspect-demo-box').classList.remove('imax-expanded');
-});
-
-document.getElementById('test-imax-sound-btn').addEventListener('click', () => {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(110, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(38, ctx.currentTime + 2.2);
-        gain.gain.setValueAtTime(0.35, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2.4);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 2.4);
-    } catch (e) {}
-    const bars = document.querySelectorAll('.eq-bar');
-    let count = 0;
-    const interval = setInterval(() => {
-        bars.forEach(b => b.style.height = `${Math.floor(Math.random() * 85) + 15}%`);
-        count++;
-        if (count > 18) {
-            clearInterval(interval);
-            bars.forEach(b => b.style.height = '20%');
-        }
-    }, 120);
-});
-
-document.querySelectorAll('.dx-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const fx = btn.dataset.fx;
-        const seatModel = document.getElementById('dx-seat-model');
-        const overlay = document.getElementById('fx-overlay');
-        const status = document.getElementById('dx-status-text');
-        seatModel.className = 'dx-seat-3d';
-        overlay.className = 'fx-overlay';
-        if (fx === 'motion') {
-            seatModel.classList.add('seat-shaking');
-            status.innerText = "Hidraulică activă: Înclinare Pitch & Roll 4DX!";
-            setTimeout(() => seatModel.classList.remove('seat-shaking'), 2000);
-        } else if (fx === 'wind') {
-            seatModel.style.transform = "rotateY(-25deg) scale(1.08)";
-            status.innerText = "Turbine de vânt pornite la 100 km/h!";
-            setTimeout(() => seatModel.style.transform = "none", 1500);
-        } else if (fx === 'lightning') {
-            overlay.classList.add('fx-lightning');
-            status.innerText = "Stroboscop LED 4DX declanșat!";
-        } else if (fx === 'rain') {
-            overlay.classList.add('fx-rain');
-            status.innerText = "Pulverizare apă și ceață activată în sală!";
-            setTimeout(() => overlay.classList.remove('fx-rain'), 2200);
-        }
-    });
-});
-
-document.getElementById('recline-slider').addEventListener('input', (e) => {
-    const angle = parseInt(e.target.value);
-    document.getElementById('angle-val').innerText = angle;
-    const tilt = (angle - 95) * 0.7;
-    document.getElementById('chair-back').style.transform = `rotate(-${tilt}deg)`;
-    document.getElementById('chair-foot').style.transform = `rotate(${75 - tilt}deg)`;
-});
-
-const wheelModal = document.getElementById('wheel-modal');
-document.getElementById('open-wheel-btn').addEventListener('click', () => {
-    document.getElementById('wheel-result').innerText = "";
-    wheelModal.style.display = 'flex';
-});
-document.getElementById('close-wheel-btn').addEventListener('click', () => wheelModal.style.display = 'none');
-
-function spinWheel(triggeredByGKey = false) {
-    const wheel = document.getElementById('wheel-circle');
-    const resultText = document.getElementById('wheel-result');
-    resultText.innerText = "Se învârte roata...";
-    const isVipWin = triggeredByGKey || forceVipJackpot || (Math.random() < 0.03);
-    forceVipJackpot = false;
-    wheelRotation += 1800;
-    if (isVipWin) {
-        const remainder = wheelRotation % 360;
-        wheelRotation += (360 - remainder) + 45;
-        wheel.style.transform = `rotate(${wheelRotation}deg)`;
-        setTimeout(() => {
-            resultText.innerHTML = `👑 JACKPOT 3%! Ai câștigat <b>2 BILETE FULL VIP GRATIS</b>! Codul <b>FREEVIP2</b> a fost activat!`;
-            document.getElementById('promo-input').value = "FREEVIP2";
-        }, 3200);
-    } else {
-        const regularPrizes = [
-            { code: "STUDENT20", angle: 315, label: "20% Reducere Studenți" },
-            { code: "CORPULN", angle: 225, label: "20% Reducere Corpul N" },
-            { code: "VIP15", angle: 135, label: "20% Reducere VIP" }
-        ];
-        const chosen = regularPrizes[Math.floor(Math.random() * regularPrizes.length)];
-        const remainder = wheelRotation % 360;
-        wheelRotation += (360 - remainder) + chosen.angle;
-        wheel.style.transform = `rotate(${wheelRotation}deg)`;
-        setTimeout(() => {
-            resultText.innerText = `🎉 Ai câștigat codul: ${chosen.code} (${chosen.label})!`;
-            document.getElementById('promo-input').value = chosen.code;
-        }, 3200);
-    }
-}
-
-document.getElementById('spin-wheel-btn').addEventListener('click', () => spinWheel(false));
-
-function populateBookingOptions(movie) {
-    bookingDateSelect.innerHTML = '';
-    bookingTimeSelect.innerHTML = '';
-    if (availableDates.length === 0) buildFutureDates(new Date());
-    availableDates.forEach(d => bookingDateSelect.appendChild(new Option(d, d)));
-    movie.times.forEach(t => bookingTimeSelect.appendChild(new Option(t, t)));
-}
-
-bookingDateSelect.addEventListener('change', () => { generateSeats(); resetSelection(); });
-bookingTimeSelect.addEventListener('change', () => { generateSeats(); resetSelection(); });
-
-function generateSeats() {
-    seatsContainer.innerHTML = '';
-    const fmt = bookingFormatSelect.value;
-    const surcharge = fmt === '4DX' ? 10 : (fmt === 'VIP' ? 15 : 0);
-    for (let r = 0; r < 7; r++) {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'row';
-        let seatClass = r < 2 ? 'standard' : (r < 5 ? 'premium' : 'vip');
-        let basePrice = r < 2 ? 30 : (r < 5 ? 45 : 60);
-        let seatPrice = basePrice + surcharge;
-        for (let c = 0; c < 12; c++) {
-            const seat = document.createElement('div');
-            seat.className = `seat ${seatClass}`;
-            seat.dataset.price = seatPrice;
-            seat.dataset.row = r + 1;
-            seat.dataset.col = c + 1;
-            seat.dataset.id = `R${r+1}L${c+1}`;
-            if (Math.random() < 0.24 && !(r === 3 && (c === 5 || c === 6))) {
-                seat.classList.add('occupied');
-            }
-            rowDiv.appendChild(seat);
-        }
-        seatsContainer.appendChild(rowDiv);
-    }
-}
-
-function update3DScreenPerspective(r, c, isAi = false) {
-    const dynScreen = document.getElementById('dynamic-screen');
-    const rotX = -50 + (r * 4);
-    const rotY = (6.5 - c) * 2.8;
-    const scale = 1.12 - (r * 0.03);
-    dynScreen.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${scale})`;
-    const label = document.getElementById('screen-perspective-label');
-    if (isAi) {
-        label.innerText = `✨ AI SWEET-SPOT ACTIVAT: R${r}L${c} & R${r}L${c+1} (ACUSTICĂ IMAX 99.8%)`;
-    } else {
-        label.innerText = `UNGHI VIZIONARE SIMULAT DE PE LOCUL R${r}L${c}`;
-    }
-}
-
+// AI Sweet-Spot pentru selectarea automată a celor mai bune locuri + rotire ecran
 document.getElementById('ai-sweetspot-btn').addEventListener('click', () => {
     document.querySelectorAll('.row .seat.selected').forEach(s => s.classList.remove('selected'));
     const preferredRows = [4, 5, 3, 6];
@@ -471,12 +349,81 @@ document.getElementById('ai-sweetspot-btn').addEventListener('click', () => {
     updateSelection();
 });
 
+// Randare filme în pagină
+function renderMovies() {
+    const selectedTime = document.getElementById('time-filter').value;
+    const selectedFormat = document.getElementById('format-filter').value;
+    const searchQuery = document.getElementById('movie-search').value.toLowerCase();
+    moviesGrid.innerHTML = '';
+    movies.forEach(movie => {
+        const matchTime = selectedTime === 'all' || movie.times.includes(selectedTime);
+        const matchFormat = selectedFormat === 'all' || movie.format === selectedFormat;
+        const matchGenre = selectedGenre === 'all' || movie.genre === selectedGenre;
+        const matchSearch = movie.title.toLowerCase().includes(searchQuery);
+        if (matchTime && matchFormat && matchGenre && matchSearch) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            let timeBadgesHtml = movie.times.map(t => `<span class="time-badge">${t}</span>`).join('');
+            card.innerHTML = `
+                <span class="card-format-tag">${movie.format}</span>
+                <span class="card-genre-tag">${movie.genre}</span>
+                <span class="card-rating-tag">★ ${movie.rating}</span>
+                <img src="${movie.poster}" alt="${movie.title}" loading="lazy">
+                <div class="movie-info">
+                    <h3>${movie.title}</h3>
+                    <div class="time-badges">${timeBadgesHtml}</div>
+                </div>
+            `;
+            card.addEventListener('click', () => openMoviePage(movie));
+            moviesGrid.appendChild(card);
+        }
+    });
+}
+
+document.getElementById('time-filter').addEventListener('change', renderMovies);
+document.getElementById('format-filter').addEventListener('change', renderMovies);
+document.getElementById('movie-search').addEventListener('input', renderMovies);
+
+// Generare scaune & mișcare ecran la click
+function populateBookingOptions(movie) {
+    bookingDateSelect.innerHTML = '';
+    bookingTimeSelect.innerHTML = '';
+    if (availableDates.length === 0) buildFutureDates(new Date());
+    availableDates.forEach(d => bookingDateSelect.appendChild(new Option(d, d)));
+    movie.times.forEach(t => bookingTimeSelect.appendChild(new Option(t, t)));
+}
+
+function generateSeats() {
+    seatsContainer.innerHTML = '';
+    const fmt = bookingFormatSelect.value;
+    const surcharge = fmt === '4DX' ? 10 : (fmt === 'VIP' ? 15 : 0);
+    for (let r = 0; r < 7; r++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+        let seatClass = r < 2 ? 'standard' : (r < 5 ? 'premium' : 'vip');
+        let seatPrice = (r < 2 ? 30 : (r < 5 ? 45 : 60)) + surcharge;
+        for (let c = 0; c < 12; c++) {
+            const seat = document.createElement('div');
+            seat.className = `seat ${seatClass}`;
+            seat.dataset.price = seatPrice;
+            seat.dataset.row = r + 1;
+            seat.dataset.col = c + 1;
+            seat.dataset.id = `R${r+1}L${c+1}`;
+            if (Math.random() < 0.24 && !(r === 3 && (c === 5 || c === 6))) {
+                seat.classList.add('occupied');
+            }
+            rowDiv.appendChild(seat);
+        }
+        seatsContainer.appendChild(rowDiv);
+    }
+}
+
 seatsContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('seat') && !e.target.classList.contains('occupied')) {
         e.target.classList.toggle('selected');
         const r = parseInt(e.target.dataset.row);
         const c = parseInt(e.target.dataset.col);
-        update3DScreenPerspective(r, c, false);
+        update3DScreenPerspective(r, c, false); // Mișcă ecranul 3D
         updateSelection();
     }
 });
@@ -485,17 +432,13 @@ function updateSelection() {
     const selected = document.querySelectorAll('.row .seat.selected');
     ticketsTotal = Array.from(selected).reduce((sum, seat) => sum + parseInt(seat.dataset.price), 0);
     const rate = exchangeRates[currentCurrency];
-    const displayVal = currentCurrency === 'RON' ? ticketsTotal : (ticketsTotal * rate).toFixed(2);
     document.getElementById('count').innerText = selected.length;
-    document.getElementById('total-tickets').innerText = displayVal;
+    document.getElementById('total-tickets').innerText = currentCurrency === 'RON' ? ticketsTotal : (ticketsTotal * rate).toFixed(2);
     document.getElementById('continue-to-snacks-btn').disabled = selected.length === 0;
 }
 
 function resetSelection() {
-    ticketsTotal = 0;
-    snacksTotal = 0;
-    finalTotal = 0;
-    discountApplied = false;
+    ticketsTotal = 0; snacksTotal = 0; finalTotal = 0;
     document.getElementById('count').innerText = '0';
     document.getElementById('total-tickets').innerText = '0';
     document.getElementById('continue-to-snacks-btn').disabled = true;
@@ -505,26 +448,20 @@ function resetSelection() {
 const snacksModal = document.getElementById('snacks-modal');
 const paymentModal = document.getElementById('payment-modal');
 
-document.getElementById('continue-to-snacks-btn').addEventListener('click', () => {
-    updateSnacksTotal();
-    snacksModal.style.display = 'flex';
-});
-
+document.getElementById('continue-to-snacks-btn').addEventListener('click', () => { snacksModal.style.display = 'flex'; });
 document.getElementById('cancel-snacks-btn').addEventListener('click', () => snacksModal.style.display = 'none');
-document.querySelectorAll('.snack-input').forEach(input => input.addEventListener('input', updateSnacksTotal));
 
-function updateSnacksTotal() {
-    const popcorn = parseInt(document.getElementById('snack-popcorn').value) || 0;
-    const nachos = parseInt(document.getElementById('snack-nachos').value) || 0;
-    const soda = parseInt(document.getElementById('snack-soda').value) || 0;
-    snacksTotal = (popcorn * 25) + (nachos * 22) + (soda * 12);
+document.querySelectorAll('.snack-input').forEach(input => input.addEventListener('input', () => {
+    const p = parseInt(document.getElementById('snack-popcorn').value) || 0;
+    const n = parseInt(document.getElementById('snack-nachos').value) || 0;
+    const s = parseInt(document.getElementById('snack-soda').value) || 0;
+    snacksTotal = (p * 25) + (n * 22) + (s * 12);
     document.getElementById('snacks-total-display').innerText = snacksTotal + " RON";
-}
+}));
 
 document.getElementById('proceed-to-pay-btn').addEventListener('click', () => {
     snacksModal.style.display = 'none';
     finalTotal = ticketsTotal + snacksTotal;
-    discountApplied = false;
     document.getElementById('summary-tickets').innerText = ticketsTotal;
     document.getElementById('summary-snacks').innerText = snacksTotal;
     document.getElementById('modal-total').innerText = finalTotal;
@@ -535,119 +472,52 @@ document.getElementById('proceed-to-pay-btn').addEventListener('click', () => {
 
 document.getElementById('close-modal').addEventListener('click', () => paymentModal.style.display = 'none');
 
-document.getElementById('apply-promo-btn').addEventListener('click', () => {
-    const code = document.getElementById('promo-input').value.trim().toUpperCase();
-    if (discountApplied) { alert("Ai aplicat deja un cod la această comandă!"); return; }
-    if (code === 'FREEVIP2') {
-        const vipFreeValue = Math.min(ticketsTotal, 150);
-        finalTotal = Math.max(0, finalTotal - vipFreeValue);
-        document.getElementById('modal-total').innerText = finalTotal.toFixed(2);
-        discountApplied = true;
-        alert(`👑 JACKPOT ACTIVAT: 2 Bilete Full VIP sunt GRATUITE (-${vipFreeValue} RON)!`);
-    } else if (code === 'STUDENT20' || code === 'CORPULN' || code === 'VIP15' || code === 'NIII7PRO') {
-        const discount = finalTotal * 0.20;
-        finalTotal = finalTotal - discount;
-        document.getElementById('modal-total').innerText = finalTotal.toFixed(2);
-        discountApplied = true;
-        alert(`Cod promoțional activat! Reducere: ${discount.toFixed(2)} RON.`);
-    } else {
-        alert("Cod promoțional invalid!");
-    }
-});
-
-document.getElementById('card-number').addEventListener('input', function() {
-    this.value = this.value.replace(/\D/g, '').substring(0, 16);
-    this.classList.remove('error');
-});
-
-document.getElementById('card-cvv').addEventListener('input', function() {
-    this.value = this.value.replace(/\D/g, '').substring(0, 3);
-    this.classList.remove('error');
-});
-
-document.getElementById('card-expiry').addEventListener('input', function() {
-    let val = this.value.replace(/[^\d/]/g, '');
-    if (val.length === 2 && !val.includes('/')) val += '/';
-    this.value = val.substring(0, 5);
-    this.classList.remove('error');
-    document.getElementById('expiry-error').style.display = 'none';
-});
-
-function isExpiryValid(exp) {
-    if (!/^\d{2}\/\d{2}$/.test(exp)) return false;
-    let [m, y] = exp.split('/');
-    m = parseInt(m);
-    y = parseInt(y) + 2000;
-    if (m < 1 || m > 12) return false;
-    let d = baseSystemDate || new Date();
-    if (y < d.getFullYear()) return false;
-    if (y === d.getFullYear() && m < (d.getMonth() + 1)) return false;
-    return true;
-}
-
+// Procesare Plată și Generare Bilet
 document.getElementById('confirm-btn').addEventListener('click', async () => {
     const email = document.getElementById('email-input').value.trim();
     if (!email.includes('@')) { alert("Introdu o adresă de email validă!"); return; }
-    if (document.getElementById('card-number').value.length !== 16) { document.getElementById('card-number').classList.add('error'); return; }
-    if (document.getElementById('card-cvv').value.length !== 3) { document.getElementById('card-cvv').classList.add('error'); return; }
-    if (!isExpiryValid(document.getElementById('card-expiry').value)) { 
-        document.getElementById('card-expiry').classList.add('error'); 
-        document.getElementById('expiry-error').style.display = 'block';
-        return; 
-    }
 
     const selectedSeats = Array.from(document.querySelectorAll('.row .seat.selected')).map(s => s.dataset.id).join(', ');
     const date = bookingDateSelect.value;
     const time = bookingTimeSelect.value;
     const fmt = bookingFormatSelect.value;
-    let snacksStr = [];
-    if (document.getElementById('snack-popcorn').value > 0) snacksStr.push(document.getElementById('snack-popcorn').value + "x Popcorn");
-    if (document.getElementById('snack-nachos').value > 0) snacksStr.push(document.getElementById('snack-nachos').value + "x Nachos");
-    if (document.getElementById('snack-soda').value > 0) snacksStr.push(document.getElementById('snack-soda').value + "x Suc");
-    let snacksText = snacksStr.length > 0 ? "Bar & Snacks: " + snacksStr.join(', ') : "";
 
     const btn = document.getElementById('confirm-btn');
     btn.innerText = "SE PROCESEAZĂ...";
-    btn.classList.add('loading');
     await new Promise(r => setTimeout(r, API_CONFIG.SIMULATE_STRIPE_DELAY));
 
-    let currentUrl = window.location.href;
-    let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-    if (baseUrl.endsWith('.html')) {
-        baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
-    }
-    const validateUrl = `${baseUrl}/validare.html?film=${encodeURIComponent(currentMovie.title + " (" + fmt + ")")}&data=${encodeURIComponent(date)}&ora=${encodeURIComponent(time)}&locuri=${encodeURIComponent(selectedSeats)}`;
-    const qrUrl = `${API_CONFIG.QR_API_URL}${encodeURIComponent(validateUrl)}`;
-
+    const qrUrl = `${API_CONFIG.QR_API_URL}${encodeURIComponent("Cinema NIII7 - " + currentMovie.title)}`;
     document.getElementById('qr-code-img').src = qrUrl;
     document.getElementById('ticket-format-badge').innerText = `${fmt} PASS`;
     document.getElementById('ticket-movie-name').innerText = currentMovie.title;
     document.getElementById('ticket-datetime').innerText = `${date} | Ora ${time}`;
     document.getElementById('ticket-seats-info').innerText = `LOCURI (${fmt}): ${selectedSeats}`;
-    document.getElementById('ticket-snacks-info').innerText = snacksText;
+
+    // === ACTIVARE BUTOANE GOOGLE & APPLE CALENDAR ===
+    const { startDate, endDate } = parseDateTime(date, time);
+    const calendarTitle = `${currentMovie.title} (${fmt})`;
+    const calendarDesc = `Bilet Cinema NIII7 Brașov\\nLocuri: ${selectedSeats}\\nFormat: ${fmt}`;
+    const calendarLocation = "Cinema NIII7, Corpul N, Universitatea Transilvania, Brașov";
+
+    const gBtn = document.getElementById('add-google-calendar-btn');
+    if (gBtn) {
+        gBtn.onclick = () => {
+            window.open(createGoogleCalendarUrl(calendarTitle, calendarDesc, calendarLocation, startDate, endDate), '_blank');
+        };
+    }
+    const aBtn = document.getElementById('add-apple-calendar-btn');
+    if (aBtn) {
+        aBtn.onclick = () => {
+            downloadICSFile(calendarTitle, calendarDesc, calendarLocation, startDate, endDate);
+        };
+    }
+
+    // === ACTIVARE REMINDER PUSH NOTIFICĂRI ===
+    setupPushReminder(currentMovie.title, date, time);
 
     saveTicketToLocal(`${currentMovie.title} [${fmt}]`, date, time, selectedSeats, qrUrl, finalTotal);
 
-    if ('speechSynthesis' in window) {
-        const msg = new SpeechSynthesisUtterance(`Rezervare confirmată la Cinema N 3 7 în sala ${fmt} pentru filmul ${currentMovie.title}. Vizionare plăcută!`);
-        msg.lang = 'ro-RO';
-        window.speechSynthesis.speak(msg);
-    }
-
-    try {
-        emailjs.init(API_CONFIG.EMAILJS_PUBLIC_KEY); 
-        emailjs.send(API_CONFIG.EMAILJS_SERVICE_ID, API_CONFIG.EMAILJS_TEMPLATE_ID, {
-            to_email: email, 
-            movie: `${currentMovie.title} (${fmt})`, 
-            date: date, 
-            time: time, 
-            seats: selectedSeats,
-            qr_link: qrUrl
-        });
-    } catch(e) {}
-
     btn.innerText = "CONFIRMĂ PLATA";
-    btn.classList.remove('loading');
     document.getElementById('payment-form-content').style.display = 'none';
     document.getElementById('ticket-success-content').style.display = 'block';
     document.querySelectorAll('.row .seat.selected').forEach(s => { s.classList.remove('selected'); s.classList.add('occupied'); });
@@ -655,8 +525,7 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('download-ticket-btn').addEventListener('click', () => {
-    const ticketDiv = document.getElementById('ticket-to-download');
-    html2canvas(ticketDiv, { backgroundColor: '#0b0c10', scale: 2, useCORS: true }).then(canvas => {
+    html2canvas(document.getElementById('ticket-to-download'), { backgroundColor: '#0b0c10', scale: 2, useCORS: true }).then(canvas => {
         const link = document.createElement('a');
         link.download = `Bilet_NIII7_${currentMovie.title.replace(/\s+/g, '_')}.png`;
         link.href = canvas.toDataURL('image/png');
@@ -683,36 +552,17 @@ function renderMyTickets() {
         return;
     }
     tickets.reverse().forEach(t => {
-        const div = document.createElement('div');
-        div.className = 'vip-ticket-pass';
-        div.style.width = '310px';
-        div.innerHTML = `
-            <div class="ticket-top"><span>CINEMA <b>NIII7</b></span><span>PASS</span></div>
-            <div class="ticket-body">
-                <h3 style="font-size:1.35rem;">${t.movie}</h3>
-                <p class="ticket-meta">${t.date} | ${t.time}</p>
-                <div class="ticket-seats-box">Locuri: ${t.seats}</div>
-            </div>
-            <div class="ticket-divider"></div>
-            <div class="ticket-bottom">
-                <div class="qr-container"><img src="${t.qrUrl}" style="width:110px; height:110px; display:block;"></div>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function renderAdminPanel() {
-    const rev = parseFloat(localStorage.getItem('cinema_revenue') || 0);
-    document.getElementById('admin-revenue').innerText = rev.toFixed(2);
-    const list = document.getElementById('admin-tickets-list');
-    list.innerHTML = '';
-    const tickets = JSON.parse(localStorage.getItem('cinema_tickets')) || [];
-    tickets.reverse().forEach(t => {
-        list.innerHTML += `<div style="border-bottom: 1px solid #25262b; padding: 12px 0; text-align:left;">
-            <strong style="color:#ff6600; font-size:1.1rem;">${t.movie}</strong> — ${t.date} (${t.time}) <br>
-            <span style="color:#9ba1b0;">Locuri: ${t.seats} | Total încasat: <b>${t.price} RON</b></span>
-        </div>`;
+        container.innerHTML += `
+            <div class="vip-ticket-pass" style="width: 310px;">
+                <div class="ticket-top"><span>CINEMA <b>NIII7</b></span><span>PASS</span></div>
+                <div class="ticket-body">
+                    <h3 style="font-size:1.35rem;">${t.movie}</h3>
+                    <p class="ticket-meta">${t.date} | ${t.time}</p>
+                    <div class="ticket-seats-box">Locuri: ${t.seats}</div>
+                </div>
+                <div class="ticket-divider"></div>
+                <div class="ticket-bottom"><div class="qr-container"><img src="${t.qrUrl}" style="width:110px; height:110px; display:block;"></div></div>
+            </div>`;
     });
 }
 

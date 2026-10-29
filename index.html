@@ -3,207 +3,996 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinema NIII7 PRO Max</title>
+    <title>CINEMA NIII7 BRAȘOV | IMAX, 4DX & Standard</title>
+    
+    <!-- Google Fonts: Oswald & Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 (Iconițe vectoriale, zero emoji) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Stiluri CSS Proprii -->
     <link rel="stylesheet" href="style.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-    <div id="home-view" class="view active">
-        <header>
-            <h1 class="cinema-title">CINEMA NIII7</h1>
-            <p class="subtitle">Magia culorilor. Alege-ți filmul și rezervă-ți locul.</p>
-            <button id="my-tickets-btn" class="btn" style="margin-top: 20px; padding: 10px 20px; font-size: 1rem;">🎟️ Biletele Mele</button>
-        </header>
 
-        <div class="filters-container">
-            <select id="time-filter">
-                <option value="all">Toate orele</option>
-                <option value="12:00">12:00</option>
-                <option value="14:00">14:00</option>
-                <option value="16:30">16:30</option>
-                <option value="18:00">18:00</option>
-                <option value="19:00">19:00</option>
-                <option value="20:30">20:30</option>
-                <option value="21:30">21:30</option>
-                <option value="23:00">23:00</option>
-            </select>
-        </div>
-
-        <div class="movies-grid" id="movies-grid"></div>
-
-        <div class="location-section">
-            <h2>Locația Cinematografului NIII7</h2>
-            <p>Ne găsești la Corpul N, chiar lângă Modarom, Brașov.</p>
-            <div class="map-container">
-                <iframe src="https://maps.google.com/maps?q=Corpul%20N%20Universitatea%20Transilvania%20Brasov&t=&z=17&ie=UTF8&iwloc=&output=embed" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" title="Harta Locatie"></iframe>
-            </div>
-        </div>
-    </div>
-
-    <div id="my-tickets-view" class="view">
-        <button id="back-to-home-btn" class="back-btn">&#8592; Înapoi</button>
-        <h2 style="color: #00f2fe; margin-bottom: 30px;">Istoric Rezervări</h2>
-        <div id="tickets-history-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;">
-        </div>
-    </div>
-
-    <div id="movie-view" class="view">
-        <button id="back-btn" class="back-btn">&#8592; Înapoi la filme</button>
-        
-        <div class="movie-header">
-            <h1 id="movie-title">Titlu Film</h1>
-            <p id="movie-desc" class="movie-description">Descriere film...</p>
-        </div>
-
-        <div class="trailer-container">
-            <video id="movie-trailer" width="100%" controls autoplay>
-                Browser-ul tău nu suportă redarea video.
-            </video>
-        </div>
-
-        <div class="booking-options">
-            <div class="input-group">
-                <label>Alege Data</label>
-                <select id="booking-date"></select>
-            </div>
-            <div class="input-group">
-                <label>Alege Ora</label>
-                <select id="booking-time"></select>
-            </div>
-        </div>
-
-        <div class="cinema-section">
-            <h2>Selectare Locuri</h2>
-            <ul class="legend">
-                <li><div class="seat standard"></div> Standard (30 RON)</li>
-                <li><div class="seat premium"></div> Premium (45 RON)</li>
-                <li><div class="seat vip"></div> VIP (60 RON)</li>
-                <li><div class="seat occupied"></div> Ocupat</li>
-                <li><div class="seat selected"></div> Selectat</li>
+    <!-- ==================== BARA DE NAVIGARE (STICKY) ==================== -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo" id="nav-logo">
+                <!-- Încearcă încărcarea pozei "Untitled design (8).jpg", apoi "logo.jpg", iar ca ultim fallback afișează SVG-ul integrat -->
+                <img src="Untitled%20design%20(8).jpg" 
+                     alt="Cinema NIII7 Logo" 
+                     id="logo-img"
+                     onerror="if(this.src.indexOf('logo.jpg')===-1){this.src='logo.jpg';}else{this.style.display='none';document.getElementById('logo-svg-fallback').classList.remove('hidden');}">
+                
+                <!-- Fallback SVG identic cu logo-ul NIII7 (Rolă film albă 'N' + 'III7' portocaliu) -->
+                <svg id="logo-svg-fallback" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 70" height="54">
+                    <circle cx="32" cy="46" r="18" fill="#ffffff"/>
+                    <circle cx="32" cy="46" r="6" fill="#000000"/>
+                    <circle cx="32" cy="35" r="2.5" fill="#000000"/>
+                    <circle cx="32" cy="57" r="2.5" fill="#000000"/>
+                    <circle cx="21" cy="46" r="2.5" fill="#000000"/>
+                    <circle cx="43" cy="46" r="2.5" fill="#000000"/>
+                    <path d="M 24 32 L 38 12 C 42 6, 48 6, 52 14 L 72 52 C 75 58, 82 58, 85 50 L 98 12 C 102 6, 110 8, 112 18" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M 24 32 L 38 12 C 42 6, 48 6, 52 14 L 72 52 C 75 58, 82 58, 85 50 L 98 12 C 102 6, 110 8, 112 18" fill="none" stroke="#000000" stroke-width="6" stroke-dasharray="2 3"/>
+                    <text x="115" y="58" font-family="'Oswald', sans-serif" font-size="44" font-weight="700" fill="#ff6600" letter-spacing="2">III7</text>
+                </svg>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="#program" class="active">Program Filme</a></li>
+                <li><a href="#sectiune-imax">IMAX</a></li>
+                <li><a href="#sectiune-4dx">4DX</a></li>
+                <li><a href="#roata-norocului">Roata Norocului</a></li>
+                <li><a href="#locatie-contact">Locație</a></li>
             </ul>
-            <div class="cinema-screen"></div>
-            <div class="seats-container" id="seats-container"></div>
-            <div class="info">
-                <span>Bilete selectate: <span id="count">0</span></span>
-                <span>Total Bilete: <span id="total-tickets">0</span> RON</span>
-            </div>
-            <button class="btn" id="continue-to-snacks-btn" disabled>Continuă (Snacks)</button>
-        </div>
-    </div>
-
-    <div class="modal" id="snacks-modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <h2 style="color: #00f2fe; margin-bottom: 20px;">Adaugă Snacks la comanda ta</h2>
             
-            <div class="snacks-grid">
-                <div class="snack-item">
-                    <span>🍿 Popcorn Mare (25 RON)</span>
-                    <input type="number" id="snack-popcorn" min="0" value="0" class="snack-input">
-                </div>
-                <div class="snack-item">
-                    <span>🌮 Nachos cu Brânză (22 RON)</span>
-                    <input type="number" id="snack-nachos" min="0" value="0" class="snack-input">
-                </div>
-                <div class="snack-item">
-                    <span>🥤 Suc 0.5L (12 RON)</span>
-                    <input type="number" id="snack-soda" min="0" value="0" class="snack-input">
-                </div>
-            </div>
-
-            <div style="margin-top: 20px; text-align: right; font-size: 1.2rem;">
-                Total curent: <strong id="snacks-total-display" style="color: #ff0844;">0 RON</strong>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="btn btn-cancel" id="cancel-snacks-btn">Înapoi la locuri</button>
-                <button class="btn" id="proceed-to-pay-btn">Spre Plată</button>
+            <div class="nav-actions">
+                <button id="btn-my-tickets" class="btn-outline">
+                    <i class="fa-solid fa-ticket"></i> Biletele Mele
+                </button>
+                <!-- Se schimbă dinamic din "Devino Membru" în "Card Membru (X PCT)" după înregistrare -->
+                <button id="btn-member-nav" class="btn-primary">
+                    <i class="fa-solid fa-user-plus"></i> <span id="member-nav-text">Devino Membru</span>
+                </button>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <div class="modal" id="payment-modal">
-        <div class="modal-content" id="payment-form-content">
-            <h2>Finalizare Plată</h2>
+    <!-- ==================== HERO SECTION (AVENGERS: DOOMSDAY) ==================== -->
+    <header class="hero">
+        <div class="hero-backdrop" style="background-image: url('https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=1920&q=80');"></div>
+        <div class="hero-vignette"></div>
+        <div class="hero-content container">
+            <div class="format-badges">
+                <span class="badge badge-orange">EVENIMENT MONDIAL</span>
+                <span class="badge">SALA 6 - IMAX 70MM</span>
+                <span class="badge">SALA 5 - 4DX</span>
+            </div>
+            <h1 class="hero-title">AVENGERS: DOOMSDAY</h1>
+            <p class="hero-meta">Acțiune, SF | 160 min | AP-12 | IMDb 9.1</p>
+            <p class="hero-desc">Confruntarea multiversală supremă sosește pe cel mai mare ecran curbat IMAX din Brașov. Rezervă-ți locurile în timp real și configurează-ți meniul de bar înainte de proiecție.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary btn-lg" onclick="openBookingModal('doom_imax_2245', 'Avengers: Doomsday', '22:45', 'Sala 6 - IMAX', 'IMAX', 160)">
+                    <i class="fa-solid fa-check"></i> Rezervă în Sala IMAX
+                </button>
+                <a href="#program" class="btn-outline btn-lg">
+                    <i class="fa-solid fa-calendar-days"></i> Explorează Programul Lunii
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== BARA DE FILTRARE & CALENDAR PÂNĂ LA FINALUL LUNII ==================== -->
+    <section id="program" class="filter-bar">
+        <div class="container">
+            <div class="filter-top-row">
+                <span class="filter-label"><i class="fa-solid fa-calendar"></i> Selectează ziua rezervării (luna curentă):</span>
+                <div class="date-selector-scroll" id="calendar-days-container">
+                    <!-- Zilele de azi până în ultima zi a lunii sunt generate automat în script.js -->
+                </div>
+            </div>
+            <div class="filter-bottom-row">
+                <div class="halls-summary-badges">
+                    <span class="hall-info-tag">Sălile 1-3: Standard 2D</span>
+                    <span class="hall-info-tag">Sălile 4-5: 4DX Motion</span>
+                    <span class="hall-info-tag tag-imax">Sala 6: IMAX Laser</span>
+                </div>
+                <div class="format-selector">
+                    <span class="filter-label">Filtrează format:</span>
+                    <button class="format-btn active" data-format="all">Toate (8)</button>
+                    <button class="format-btn" data-format="IMAX">Exclusiv IMAX</button>
+                    <button class="format-btn" data-format="4DX">4DX</button>
+                    <button class="format-btn" data-format="2D">Standard 2D</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== GRILA DE FILME (8 FILME, FĂRĂ SUPRAPUNERI DE SĂLI) ==================== -->
+    <main class="container section-padding">
+        <div class="section-header">
+            <h2 class="section-title">ACUM ÎN CINEMA NIII7</h2>
+            <p class="section-subtitle">Treci cu mouse-ul peste afiș pentru redarea trailerului. Proiecțiile IMAX rulează exclusiv în Sala 6.</p>
+        </div>
+
+        <div class="movies-grid" id="movies-grid">
             
-            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <p>Bilete: <span id="summary-tickets">0</span> RON</p>
-                <p>Snacks: <span id="summary-snacks">0</span> RON</p>
-                <div class="input-group" style="margin-top: 10px;">
-                    <label>Cod Reducere (ex: STUDENT20)</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="promo-input" placeholder="Introdu codul">
-                        <button id="apply-promo-btn" class="btn" style="padding: 10px; font-size: 1rem;">Aplică</button>
+            <!-- 1. OPPENHEIMER (Lansat în IMAX -> Sala 6 + Sala 2) -->
+            <div class="movie-card" data-movie-id="oppenheimer" data-formats="IMAX,2D" data-mood="profound" data-duration="180">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" alt="Oppenheimer" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/oppenheimer.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-explosion-of-fire-and-sparks-in-slow-motion-41345-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">N-15 | Biografic, Dramă</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 8.9</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-card-title">Oppenheimer</h3>
+                    <p class="movie-card-meta">Regia: Christopher Nolan | 180 min | Format 70mm</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('opp_imax_1600', 'Oppenheimer', '16:00', 'Sala 6 - IMAX', 'IMAX', 180)">
+                            <span class="time">16:00</span>
+                            <span class="format">IMAX • S6</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('opp_2d_2030', 'Oppenheimer', '20:30', 'Sala 2 - Standard', '2D', 180)">
+                            <span class="time">20:30</span>
+                            <span class="format">2D • S2</span>
+                        </button>
                     </div>
                 </div>
-                <p style="font-size: 1.3em; margin-top: 10px;">Total de plată: <strong class="highlight-text"><span id="modal-total">0</span> RON</strong></p>
             </div>
-            
-            <div class="input-group">
-                <label>Adresa de Email (pentru primire bilet)</label>
-                <input type="email" id="email-input" placeholder="nume@exemplu.ro" required>
-            </div>
-            <div class="input-group">
-                <label>Nume pe card</label>
-                <input type="text" id="card-name" placeholder="Ex: Constantinescu Marian">
-            </div>
-            <div class="input-group">
-                <label>Număr Card (Doar cifre, max 16)</label>
-                <input type="text" id="card-number" placeholder="0000 0000 0000 0000">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="input-group" style="flex: 1;">
-                    <label>Expirare (LL/AA)</label>
-                    <input type="text" id="card-expiry" placeholder="12/28">
-                    <small id="expiry-error" style="color: #ff0844; display: none;">Dată invalidă!</small>
+
+            <!-- 2. INTERSTELLAR (Lansat în IMAX -> Sala 6 + Sala 1) -->
+            <div class="movie-card" data-movie-id="interstellar" data-formats="IMAX,2D" data-mood="profound" data-duration="169">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="Interstellar" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/interstellar.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-stars-in-space-1610-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">AP-12 | SF, Aventură</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 8.7</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
                 </div>
-                <div class="input-group" style="flex: 1;">
-                    <label>CVV (3 cifre)</label>
-                    <input type="password" id="card-cvv" placeholder="123">
+                <div class="movie-info">
+                    <h3 class="movie-card-title">Interstellar</h3>
+                    <p class="movie-card-meta">Regia: Christopher Nolan | 169 min | IMAX Laser</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('int_imax_1245', 'Interstellar', '12:45', 'Sala 6 - IMAX', 'IMAX', 169)">
+                            <span class="time">12:45</span>
+                            <span class="format">IMAX • S6</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('int_2d_1930', 'Interstellar', '19:30', 'Sala 1 - Standard', '2D', 169)">
+                            <span class="time">19:30</span>
+                            <span class="format">2D • S1</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="modal-buttons">
-                <button class="btn btn-cancel" id="close-modal">Anulează</button>
-                <button class="btn" id="confirm-btn">Plătește</button>
+            <!-- 3. INCEPTION (Rulează în Standard & 4DX -> Sala 1, Sala 3, Sala 4) -->
+            <div class="movie-card" data-movie-id="inception" data-formats="4DX,2D" data-mood="action" data-duration="148">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" alt="Inception" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/inception.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-at-night-11-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">N-15 | SF, Thriller</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 8.8</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-card-title">Inception</h3>
+                    <p class="movie-card-meta">Regia: Christopher Nolan | 148 min | 4DX & 2D</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('inc_2d_1615', 'Inception', '16:15', 'Sala 1 - Standard', '2D', 148)">
+                            <span class="time">16:15</span>
+                            <span class="format">2D • S1</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('inc_4dx_1730', 'Inception', '17:30', 'Sala 4 - 4DX', '4DX', 148)">
+                            <span class="time">17:30</span>
+                            <span class="format">4DX • S4</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('inc_2d_1830', 'Inception', '18:30', 'Sala 3 - Standard', '2D', 148)">
+                            <span class="time">18:30</span>
+                            <span class="format">2D • S3</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 2001: A SPACE ODYSSEY (Restaurat IMAX -> Sala 6 + Sala 1) -->
+            <div class="movie-card" data-movie-id="odyssey" data-formats="IMAX,2D" data-mood="profound" data-duration="149">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/ve72VxNqjGM69Uky4WTo2bK6rfq.jpg" alt="2001: A Space Odyssey" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/odyssey.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-planet-earth-rotating-in-space-41566-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">AG | SF, Clasic</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 8.3</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-card-title">2001: A Space Odyssey</h3>
+                    <p class="movie-card-meta">Regia: Stanley Kubrick | 149 min | Master IMAX</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('ody_imax_1000', '2001: A Space Odyssey', '10:00', 'Sala 6 - IMAX', 'IMAX', 149)">
+                            <span class="time">10:00</span>
+                            <span class="format">IMAX • S6</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('ody_2d_1300', '2001: A Space Odyssey', '13:00', 'Sala 1 - Standard', '2D', 149)">
+                            <span class="time">13:00</span>
+                            <span class="format">2D • S1</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. AVATAR: FIRE AND ASH (IMAX + 4DX + 2D -> Sala 6, Sala 4, Sala 2) -->
+            <div class="movie-card" data-movie-id="avatar" data-formats="IMAX,4DX,2D" data-mood="visual" data-duration="190">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg" alt="Avatar: Fire and Ash" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/avatar.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-Waterfall-in-forest-2213-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">AP-12 | SF, Aventură</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 8.5</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-card-title">Avatar: Fire and Ash</h3>
+                    <p class="movie-card-meta">Regia: James Cameron | 190 min | HFR 3D</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('ava_2d_1700', 'Avatar: Fire and Ash', '17:00', 'Sala 2 - Standard', '2D', 190)">
+                            <span class="time">17:00</span>
+                            <span class="format">2D • S2</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('ava_4dx_2030', 'Avatar: Fire and Ash', '20:30', 'Sala 4 - 4DX', '4DX', 190)">
+                            <span class="time">20:30</span>
+                            <span class="format">4DX • S4</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('ava_imax_2145', 'Avatar: Fire and Ash', '21:45', 'Sala 6 - IMAX', 'IMAX', 190)">
+                            <span class="time">21:45</span>
+                            <span class="format">IMAX • S6</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. SPIDER-MAN: ACROSS THE SPIDER-VERSE (4DX & 2D -> Sala 2, Sala 4, Sala 5) -->
+            <div class="movie-card" data-movie-id="spiderverse" data-formats="4DX,2D" data-mood="visual" data-duration="140">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Spider-Man: Across the Spider-Verse" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/spiderverse.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-neon-lights-moving-fast-41645-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">AG | Animație, Acțiune</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 8.6</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-card-title">Spider-Man: Across the Spider-Verse</h3>
+                    <p class="movie-card-meta"> Sony Pictures Animation | 140 min | 4DX Motion</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('spv_2d_1400', 'Spider-Man: Across the Spider-Verse', '14:00', 'Sala 2 - Standard', '2D', 140)">
+                            <span class="time">14:00</span>
+                            <span class="format">2D • S2</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('spv_4dx_1430', 'Spider-Man: Across the Spider-Verse', '14:30', 'Sala 4 - 4DX', '4DX', 140)">
+                            <span class="time">14:30</span>
+                            <span class="format">4DX • S4</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('spv_4dx_2115', 'Spider-Man: Across the Spider-Verse', '21:15', 'Sala 5 - 4DX', '4DX', 140)">
+                            <span class="time">21:15</span>
+                            <span class="format">4DX • S5</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. SPIDER-MAN: BRAND NEW DAY (IMAX, 4DX, 2D -> Sala 5, Sala 3, Sala 6) -->
+            <div class="movie-card" data-movie-id="spidermanbnd" data-formats="IMAX,4DX,2D" data-mood="action" data-duration="138">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg" alt="Spider-Man: Brand New Day" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/spiderman_bnd.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-night-skyscrapers-in-a-modern-city-41734-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">AP-12 | Acțiune, Marvel</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 8.8</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-card-title">Spider-Man: Brand New Day</h3>
+                    <p class="movie-card-meta">Marvel Studios | 138 min | Filmat pentru IMAX</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('bnd_4dx_1500', 'Spider-Man: Brand New Day', '15:00', 'Sala 5 - 4DX', '4DX', 138)">
+                            <span class="time">15:00</span>
+                            <span class="format">4DX • S5</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('bnd_2d_1530', 'Spider-Man: Brand New Day', '15:30', 'Sala 3 - Standard', '2D', 138)">
+                            <span class="time">15:30</span>
+                            <span class="format">2D • S3</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('bnd_imax_1915', 'Spider-Man: Brand New Day', '19:15', 'Sala 6 - IMAX', 'IMAX', 138)">
+                            <span class="time">19:15</span>
+                            <span class="format">IMAX • S6</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. AVENGERS: DOOMSDAY (IMAX, 4DX, 2D -> Sala 5, Sala 3, Sala 6) -->
+            <div class="movie-card" data-movie-id="doomsday" data-formats="IMAX,4DX,2D" data-mood="action" data-duration="160">
+                <div class="poster-wrapper">
+                    <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg" alt="Avengers: Doomsday" class="movie-poster">
+                    <video class="trailer-video" muted loop playsinline preload="none">
+                        <source src="trailers/doomsday.mp4" type="video/mp4">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-sparks-flying-from-a-welding-torch-41455-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="poster-badge-left">AP-12 | Acțiune, SF</div>
+                    <div class="poster-badge-right"><i class="fa-solid fa-star"></i> IMDb 9.1</div>
+                    <div class="hover-status-tag"><i class="fa-solid fa-play"></i> Trailer Activ</div>
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-card-title">Avengers: Doomsday</h3>
+                    <p class="movie-card-meta">Regia: Russo Brothers | 160 min | IMAX 70mm</p>
+                    <div class="showtimes-label">Alege sala și ora:</div>
+                    <div class="showtimes-grid">
+                        <button class="time-btn" onclick="openBookingModal('doom_4dx_1800', 'Avengers: Doomsday', '18:00', 'Sala 5 - 4DX', '4DX', 160)">
+                            <span class="time">18:00</span>
+                            <span class="format">4DX • S5</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('doom_2d_2130', 'Avengers: Doomsday', '21:30', 'Sala 3 - Standard', '2D', 160)">
+                            <span class="time">21:30</span>
+                            <span class="format">2D • S3</span>
+                        </button>
+                        <button class="time-btn" onclick="openBookingModal('doom_imax_2245', 'Avengers: Doomsday', '22:45', 'Sala 6 - IMAX', 'IMAX', 160)">
+                            <span class="time">22:45</span>
+                            <span class="format">IMAX • S6</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ==================== SECȚIUNEA DEDICATĂ SALA 6: IMAX ==================== -->
+    <section id="sectiune-imax" class="section-imax section-padding">
+        <div class="container">
+            <div class="imax-banner-box">
+                <div class="imax-text-col">
+                    <span class="eyebrow-text">SALA 6 • ARHITECTURĂ AMFITEATRU</span>
+                    <h2 class="section-title">TEHNOLOGIA IMAX LASER 70MM</h2>
+                    <p class="section-subtitle">
+                        Sala 6 din cadrul Cinema NIII7 este cea mai mare sală din complex, proiectată special pentru filmele turnate cu camere IMAX. Ecranul curbat din perete în perete oferă un raport de aspect extins (1.43:1 / 1.90:1), dezvăluind cu până la 26% mai multă imagine față de sălile standard.
+                    </p>
+                    <div class="imax-specs-grid">
+                        <div class="spec-box">
+                            <i class="fa-solid fa-expand"></i>
+                            <h4>Capacitate Extinsă</h4>
+                            <p>Amfiteatru de mari dimensiuni (12 rânduri x 16 locuri) cu vizibilitate geometrică neobstructionată.</p>
+                        </div>
+                        <div class="spec-box">
+                            <i class="fa-solid fa-eye"></i>
+                            <h4>Dual-Laser 4K</h4>
+                            <p>Contrast extrem și negru profund pentru cadrele spațiale din Interstellar și 2001: A Space Odyssey.</p>
+                        </div>
+                        <div class="spec-box">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <h4>Acustică Calibrată</h4>
+                            <p>Sistem audio pe 12 canale cu subwoofere de joasă frecvență calibrate prin laser.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="imax-visual-col">
+                    <div class="imax-ratio-comparison">
+                        <div class="ratio-imax-frame">
+                            <span class="ratio-label-imax">CADRU COMPLET IMAX (+26% IMAGINE)</span>
+                            <div class="ratio-standard-frame">
+                                <span class="ratio-label-std">ECRAN STANDARD</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="modal-content" id="ticket-success-content" style="display: none; max-width: 500px;">
-            <h2 style="color: #00f2fe;">Plată Confirmată!</h2>
-            <p style="margin-bottom: 15px;">Biletul a fost salvat și în "Biletele Mele".</p>
-            
-            <div id="ticket-to-download" class="ticket-card" style="background: linear-gradient(135deg, #160a2c, #081a3a); padding: 25px; border-radius: 15px; border: 2px dashed #00f2fe; text-align: left;">
-                <h2 style="color: #fff; border-bottom: 1px solid #4facfe; padding-bottom: 10px; margin-bottom: 15px;">CINEMA NIII7</h2>
-                <h3 id="ticket-movie-name" style="color: #00f2fe; font-size: 1.5rem;">Film</h3>
-                <p id="ticket-datetime" style="color: #ccc; margin-top: 5px;">Data | Ora</p>
-                <p id="ticket-seats-info" style="color: #ff0844; margin-top: 10px; font-weight: bold; font-size: 1.1rem;">Locuri: </p>
-                <p id="ticket-snacks-info" style="color: #a0a0b0; margin-top: 5px; font-size: 0.9rem;"></p>
+    </section>
+
+    <!-- ==================== SECȚIUNEA DEDICATĂ SĂLILE 4 & 5: 4DX ==================== -->
+    <section id="sectiune-4dx" class="section-4dx section-padding">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="eyebrow-text">SĂLILE 4 ȘI 5 • IMERSIUNE FIZICĂ</span>
+                <h2 class="section-title">SIMTE FILMUL. EXPERIENȚA ABSOLUTĂ 4DX</h2>
+                <p class="section-subtitle">Săli intime echipate cu module mecanice și efecte atmosferice sincronizate la milisecundă cu acțiunea.</p>
+            </div>
+
+            <div class="grid-4dx">
+                <div class="card-4dx">
+                    <div class="icon-4dx-wrapper"><i class="fa-solid fa-chair"></i></div>
+                    <h3>Scaune Mișcătoare 3G</h3>
+                    <p>Servomotoare pe trei axe (heave, pitch, roll) care reproduc vibrațiile, accelerațiile și turbulențele.</p>
+                </div>
+                <div class="card-4dx">
+                    <div class="icon-4dx-wrapper"><i class="fa-solid fa-wind"></i></div>
+                    <h3>Efecte de Vânt</h3>
+                    <p>Turbine silențioase și jeturi de aer la nivelul gâtului pentru secvențele de zbor și viteză.</p>
+                </div>
+                <div class="card-4dx">
+                    <div class="icon-4dx-wrapper"><i class="fa-solid fa-droplet"></i></div>
+                    <h3>Apă și Ceață</h3>
+                    <p>Micro-pulverizatoare integrate care simulează ploaia, valurile și umiditatea mediului.</p>
+                </div>
+                <div class="card-4dx">
+                    <div class="icon-4dx-wrapper"><i class="fa-solid fa-bolt"></i></div>
+                    <h3>Arome și Stroboscop</h3>
+                    <p>Dispersie olfactivă ambientală și panouri LED de mare putere pentru simularea fulgerelor.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== ROATA NOROCULUI (GAMIFICARE SECURIZATĂ) ==================== -->
+    <section id="roata-norocului" class="section-wheel section-padding">
+        <div class="container wheel-layout">
+            <div class="wheel-text-col">
+                <span class="eyebrow-text">RECOMPENSE ZILNICE</span>
+                <h2 class="section-title">ROATA NOROCULUI NIII7</h2>
+                <p class="wheel-rules">
+                    Învârte roata o singură dată pe zi pentru șansa de a câștiga un cod de discount. Codul funcționează în coșul de cumpărături <strong>doar dacă a picat ca fiind câștigător la roată</strong> în sesiunea ta.
+                </p>
                 
-                <div class="qr-container" style="background: #fff; padding: 10px; border-radius: 10px; display: inline-block; margin-top: 15px;">
-                    <img id="qr-code-img" src="" alt="QR Code Bilet" style="width: 150px; height: 150px; display: block;">
+                <div id="wheel-status-box" class="wheel-status-box">
+                    <p id="wheel-status-text">Stare: Ai 1 rotire disponibilă astăzi.</p>
+                    <div id="won-code-display" class="won-code-container hidden">
+                        <span>Cod câștigat activat:</span>
+                        <strong id="generated-promo-code" class="promo-badge">---</strong>
+                    </div>
+                </div>
+
+                <button id="btn-spin-wheel" class="btn-primary btn-lg">
+                    <i class="fa-solid fa-rotate"></i> Învârte Roata pentru Discount
+                </button>
+            </div>
+
+            <div class="wheel-canvas-col">
+                <div class="wheel-container">
+                    <div class="wheel-pointer"><i class="fa-solid fa-caret-down"></i></div>
+                    <canvas id="wheelCanvas" width="380" height="380"></canvas>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- ==================== LOCAȚIE ȘI CONTACT (GOOGLE MAPS BRAȘOV) ==================== -->
+    <section id="locatie-contact" class="section-contact section-padding">
+        <div class="container contact-grid">
+            <div class="contact-info-box">
+                <span class="eyebrow-text">ACCES ȘI PARCARE</span>
+                <h2 class="section-title">LOCAȚIA CINEMA NIII7 BRAȘOV</h2>
+                <p class="section-subtitle">Ne găsești în inima orașului Brașov, cu acces rapid la toate cele 6 săli de proiecție și zona de Snack Bar.</p>
+                
+                <ul class="contact-list">
+                    <li>
+                        <i class="fa-solid fa-location-dot"></i>
+                        <div>
+                            <strong>Adresă Complex:</strong>
+                            <span>Strada Zaharia Stancu Nr. 1, Brașov, România</span>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-square-parking"></i>
+                        <div>
+                            <strong>Parcare Clienți:</strong>
+                            <span>3 ore gratuite pe baza codului QR de pe biletul digital NIII7.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-clock"></i>
+                        <div>
+                            <strong>Program Casierie & Bar:</strong>
+                            <span>Luni – Duminică: 09:30 – 00:30</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="map-wrapper">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2788.452692543831!2d25.6102643!3d45.6720539!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40b35b9b539b9e6d%3A0x6a0c588479c0e600!2sCoresi%20Shopping%20Resort!5e0!3m2!1sro!2sro!4v1700000000000!5m2!1sro!2sro" 
+                    width="100%" 
+                    height="360" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== MODAL 1: CHECKOUT ÎN 3 PAȘI (LOCURI -> SNACK BAR -> PLATĂ) ==================== -->
+    <div id="booking-modal" class="modal-overlay hidden">
+        <div class="modal-box modal-xl">
+            <div class="modal-header">
+                <div>
+                    <h2 id="booking-movie-title" class="modal-title">Titlu Film</h2>
+                    <p id="booking-movie-meta" class="modal-subtitle">Sala | Data | Ora</p>
+                </div>
+                <button class="btn-close-modal" onclick="closeBookingModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Indicator Pași Checkout -->
+            <div class="checkout-steps-bar">
+                <div class="step-item active" id="step-indicator-1">
+                    <span class="step-num">1</span> Selectare Locuri (Live)
+                </div>
+                <div class="step-item" id="step-indicator-2">
+                    <span class="step-num">2</span> Configurator Snack Bar
+                </div>
+                <div class="step-item" id="step-indicator-3">
+                    <span class="step-num">3</span> Sumar, Discount & Plată
+                </div>
+            </div>
+
+            <!-- PASUL 1: HARTA SĂLII DINAMICĂ (IMAX MARE vs 4DX vs STANDARD) -->
+            <div id="checkout-step-1" class="checkout-step-pane">
+                <div class="hall-area">
+                    <div class="hall-badge-info" id="hall-dimension-info">Configurație Sală</div>
+                    <div class="screen-3d-container" id="screen-container">
+                        <div class="screen-3d" id="screen-element">ECRAN PROIECȚIE</div>
+                    </div>
+
+                    <div class="seats-scroll-wrapper">
+                        <div id="seats-grid" class="seats-grid">
+                            <!-- Generat dinamic în script.js: Sala 6 IMAX este mult mai mare decât Sălile 1-5 -->
+                        </div>
+                    </div>
+
+                    <div class="seats-legend">
+                        <div class="legend-item"><span class="seat-sample available"></span> Liber</div>
+                        <div class="legend-item"><span class="seat-sample selected"></span> Selectat de tine</div>
+                        <div class="legend-item"><span class="seat-sample locked"></span> Blocat live (Alt client)</div>
+                        <div class="legend-item"><span class="seat-sample occupied"></span> Vândut</div>
+                    </div>
+                </div>
+
+                <div class="step-footer">
+                    <div class="step-selection-info">
+                        <span>Locuri selectate: </span>
+                        <strong id="step1-selected-seats" class="text-orange">Niciun loc selectat</strong>
+                        <span id="step1-price-preview" class="text-muted">(0 RON)</span>
+                    </div>
+                    <button id="btn-to-step-2" class="btn-primary" disabled onclick="goToCheckoutStep(2)">
+                        Pasul Următor: Snack Bar <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PASUL 2: CONFIGURATOR SNACK BAR (POPCORN, NACHOS, BĂUTURI) -->
+            <div id="checkout-step-2" class="checkout-step-pane hidden">
+                <div class="snacks-layout">
+                    <!-- Stânga: Cele 3 Configuratoare de Produse -->
+                    <div class="snacks-configurators">
+                        
+                        <!-- 1. Configurator Popcorn (Sare / Aromă de brânză / Aromă de sweet chili) -->
+                        <div class="snack-card">
+                            <div class="snack-card-header">
+                                <i class="fa-solid fa-bowl-food snack-icon"></i>
+                                <div>
+                                    <h3>Popcorn Proaspăt</h3>
+                                    <p class="text-muted">Alege mărimea și aroma preferată</p>
+                                </div>
+                            </div>
+                            <div class="snack-options-group">
+                                <label>Mărime:</label>
+                                <select id="popcorn-size" class="form-select">
+                                    <option value="Mic" data-price="18">Mic (18 RON)</option>
+                                    <option value="Mediu" data-price="24" selected>Mediu (24 RON)</option>
+                                    <option value="Mare" data-price="30">Mare (30 RON)</option>
+                                </select>
+                            </div>
+                            <div class="snack-options-group">
+                                <label>Aromă:</label>
+                                <select id="popcorn-flavor" class="form-select">
+                                    <option value="Sare">Cu Sare</option>
+                                    <option value="Aromă de brânză">Cu Aromă de brânză</option>
+                                    <option value="Aromă de sweet chili">Cu Aromă de sweet chili</option>
+                                </select>
+                            </div>
+                            <button class="btn-outline btn-block mt-2" onclick="addConfiguredSnack('popcorn')">
+                                <i class="fa-solid fa-plus"></i> Adaugă Popcorn
+                            </button>
+                        </div>
+
+                        <!-- 2. Configurator Nachos (Mărime + Pudră brânză/sweet chili + Sos brânză/salsa) -->
+                        <div class="snack-card">
+                            <div class="snack-card-header">
+                                <i class="fa-solid fa-Cheese snack-icon"></i>
+                                <div>
+                                    <h3>Nachos Mexican</h3>
+                                    <p class="text-muted">Alege mărimea, pudra și sosul cald</p>
+                                </div>
+                            </div>
+                            <div class="snack-options-group">
+                                <label>Mărime:</label>
+                                <select id="nachos-size" class="form-select">
+                                    <option value="Mic" data-price="21">Mic (21 RON)</option>
+                                    <option value="Mediu" data-price="27" selected>Mediu (27 RON)</option>
+                                    <option value="Mare" data-price="33">Mare (33 RON)</option>
+                                </select>
+                            </div>
+                            <div class="snack-options-group">
+                                <label>Condimente:</label>
+                                <select id="nachos-powder" class="form-select">
+                                    <option value="Pudră de brânză">Cu Pudră de brânză</option>
+                                    <option value="Pudră de sweet chili">Cu Pudră de sweet chili</option>
+                                </select>
+                            </div>
+                            <div class="snack-options-group">
+                                <label>Sos inclus:</label>
+                                <select id="nachos-sauce" class="form-select">
+                                    <option value="Sos de brânză">Sos de brânză</option>
+                                    <option value="Sos Salsa">Sos Salsa</option>
+                                </select>
+                            </div>
+                            <button class="btn-outline btn-block mt-2" onclick="addConfiguredSnack('nachos')">
+                                <i class="fa-solid fa-plus"></i> Adaugă Nachos
+                            </button>
+                        </div>
+
+                        <!-- 3. Configurator Băuturi (Pepsi, Pepsi Zero, Lipton, Apă Plată/Minerală) -->
+                        <div class="snack-card">
+                            <div class="snack-card-header">
+                                <i class="fa-solid fa-glass-water snack-icon"></i>
+                                <div>
+                                    <h3>Băuturi Răcoritoare</h3>
+                                    <p class="text-muted">Servite reci la barul NIII7</p>
+                                </div>
+                            </div>
+                            <div class="snack-options-group">
+                                <label>Sortiment:</label>
+                                <select id="drink-type" class="form-select">
+                                    <option value="Pepsi">Pepsi</option>
+                                    <option value="Pepsi Zero">Pepsi Zero</option>
+                                    <option value="Lipton">Lipton Ice Tea</option>
+                                    <option value="Apă Plată">Apă Plată</option>
+                                    <option value="Apă Minerală">Apă Minerală</option>
+                                </select>
+                            </div>
+                            <div class="snack-options-group">
+                                <label>Mărime:</label>
+                                <select id="drink-size" class="form-select">
+                                    <option value="Mic" data-price="9">Mic - 0.4L (9 RON)</option>
+                                    <option value="Mediu" data-price="12" selected>Mediu - 0.5L (12 RON)</option>
+                                    <option value="Mare" data-price="15">Mare - 0.75L (15 RON)</option>
+                                </select>
+                            </div>
+                            <button class="btn-outline btn-block mt-2" onclick="addConfiguredSnack('drink')">
+                                <i class="fa-solid fa-plus"></i> Adaugă Băutură
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Dreapta: Coșul curent de la Snack Bar & Recomandarea AI contextuală -->
+                    <div class="snacks-cart-sidebar">
+                        <h4>Produse Snack Bar Selectate</h4>
+                        <div id="ai-snack-upsell-banner" class="ai-upsell-banner hidden">
+                            <!-- Populat inteligent de AI în funcție de durata filmului și ora proiecției -->
+                        </div>
+                        <div id="snacks-cart-list" class="snacks-cart-list">
+                            <p class="text-muted">Nu ai adăugat încă produse de la bar.</p>
+                        </div>
+                        <div class="snacks-subtotal-box">
+                            <span>Subtotal Snack Bar:</span>
+                            <strong id="snacks-subtotal-val" class="text-orange">0 RON</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-footer">
+                    <button class="btn-outline" onclick="goToCheckoutStep(1)">
+                        <i class="fa-solid fa-arrow-left"></i> Înapoi la Harta Sălii
+                    </button>
+                    <button class="btn-primary" onclick="goToCheckoutStep(3)">
+                        Pasul Următor: Sumar & Plată <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PASUL 3: SUMAR FINAL, VALIDARE DISCOUNT ROATĂ & CALCUL PUNCTE MEMBRU -->
+            <div id="checkout-step-3" class="checkout-step-pane hidden">
+                <div class="final-checkout-grid">
+                    <div class="order-details-summary">
+                        <h3>Detalii Rezervare</h3>
+                        <div class="summary-block">
+                            <p><strong>Film:</strong> <span id="sum-movie">---</span></p>
+                            <p><strong>Sală & Format:</strong> <span id="sum-hall">---</span></p>
+                            <p><strong>Data & Ora:</strong> <span id="sum-datetime">---</span></p>
+                            <p><strong>Locuri:</strong> <span id="sum-seats" class="text-orange">---</span></p>
+                        </div>
+                        <div class="summary-block">
+                            <h4>Comandă Snack Bar</h4>
+                            <div id="sum-snacks-items" class="text-muted">Fără produse de la bar.</div>
+                        </div>
+                    </div>
+
+                    <div class="payment-calculation-box">
+                        <h3>Calcul și Fidelitate</h3>
+
+                        <!-- Validare Cod Discount Roata Norocului -->
+                        <div class="promo-validation-box">
+                            <label for="input-promo-code">Cod Discount (exclusiv de la Roata Norocului):</label>
+                            <div class="promo-input-group">
+                                <input type="text" id="input-promo-code" placeholder="Cod câștigat la roată">
+                                <button id="btn-apply-promo" class="btn-outline btn-sm">Aplică</button>
+                            </div>
+                            <small id="promo-feedback" class="promo-feedback"></small>
+                        </div>
+
+                        <div class="price-breakdown">
+                            <div class="price-row">
+                                <span>Subtotal Bilete:</span>
+                                <span id="final-tickets-subtotal">0 RON</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Subtotal Snack Bar:</span>
+                                <span id="final-snacks-subtotal">0 RON</span>
+                            </div>
+                            <div class="price-row hidden" id="final-discount-row">
+                                <span>Discount Roata Norocului:</span>
+                                <span id="final-discount-val" class="text-orange">-0 RON</span>
+                            </div>
+                            <div class="price-row total-row">
+                                <span>Total Final de Plată:</span>
+                                <span id="final-total-pay" class="text-orange">0 RON</span>
+                            </div>
+                        </div>
+
+                        <!-- Calcul Puncte Card Membru (1 punct la fiecare 3 RON cheltuiți) -->
+                        <div class="loyalty-calculation-banner">
+                            <i class="fa-solid fa-id-card"></i>
+                            <div id="loyalty-checkout-msg">
+                                Vei acumula <strong id="points-to-earn">0</strong> puncte pe Cardul de Membru (1 punct / 3 RON).
+                            </div>
+                        </div>
+
+                        <button id="btn-confirm-booking" class="btn-primary btn-block btn-lg mt-2">
+                            <i class="fa-solid fa-check-double"></i> Confirmă Rezervarea și Generează Biletul QR
+                        </button>
+                    </div>
+                </div>
+
+                <div class="step-footer">
+                    <button class="btn-outline" onclick="goToCheckoutStep(2)">
+                        <i class="fa-solid fa-arrow-left"></i> Înapoi la Snack Bar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: BILETUL DIGITAL MASTER (FĂRĂ SPLIT THE BILL) ==================== -->
+    <div id="ticket-modal" class="modal-overlay hidden">
+        <div class="modal-box modal-md">
+            <div class="modal-header">
+                <h2 class="modal-title">Biletul Tău Digital NIII7</h2>
+                <button class="btn-close-modal" onclick="closeTicketModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="ticket-body">
+                <div class="digital-ticket-card">
+                    <div class="ticket-info-col">
+                        <span class="eyebrow-text">CINEMA NIII7 BRAȘOV</span>
+                        <h3 id="ticket-movie-name">Titlu Film</h3>
+                        <p id="ticket-hall-time">Sală | Zi, Oră</p>
+                        <p>Locuri: <strong id="ticket-seats-confirmed" class="text-orange">---</strong></p>
+                        <p>Snack Bar: <span id="ticket-snacks-confirmed" class="text-light">Fără produse</span></p>
+                        <p>Total Achitat: <strong id="ticket-total-paid">0 RON</strong></p>
+                        <p>ID Rezervare: <span id="ticket-booking-id">#N7-00000</span></p>
+                    </div>
+                    <div class="ticket-qr-col">
+                        <div id="ticket-qr-code" class="qr-container"></div>
+                        <small class="qr-caption">Scanează la intrare și la bar</small>
+                    </div>
+                </div>
+
+                <!-- Integrare Sistem de Operare: Calendar & Web Push -->
+                <div class="os-integrations">
+                    <h4>Sincronizare Calendar & Notificări</h4>
+                    <div class="integration-buttons">
+                        <button id="btn-google-cal" class="btn-outline btn-sm">
+                            <i class="fa-brands fa-google"></i> Google Calendar
+                        </button>
+                        <button id="btn-apple-ics" class="btn-outline btn-sm">
+                            <i class="fa-brands fa-apple"></i> Apple Calendar (.ICS)
+                        </button>
+                        <button id="btn-push-notify" class="btn-outline btn-sm">
+                            <i class="fa-solid fa-bell"></i> Activează Alerta Push
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3: MEMBRU NIII7 (ÎNREGISTRARE -> CARD 3D CU 0 PCT INIȚIAL) ==================== -->
+    <div id="member-modal" class="modal-overlay hidden">
+        <div class="modal-box modal-md">
+            <div class="modal-header">
+                <h2 class="modal-title" id="member-modal-title">Înregistrare Card Membru NIII7</h2>
+                <button class="btn-close-modal" onclick="closeMemberModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="member-body">
+                
+                <!-- VEDEREA 1: Formular de Înregistrare (Afișat dacă utilizatorul NU are încă card) -->
+                <div id="member-register-view">
+                    <p class="section-subtitle mb-2">
+                        Înscrie-te gratuit în programul de loialitate Cinema NIII7. Cardul tău pornește de la <strong>0 puncte</strong> și acumulează automat <strong>1 punct pentru fiecare 3 RON cheltuiți</strong> pe bilete și produse de la Snack Bar.
+                    </p>
+                    <form id="member-registration-form" class="member-form">
+                        <div class="form-group">
+                            <label for="member-input-name">Nume și Prenume:</label>
+                            <input type="text" id="member-input-name" required placeholder="Ex: Prepeliță Ayan-Moreno">
+                        </div>
+                        <div class="form-group">
+                            <label for="member-input-email">Adresă de Email:</label>
+                            <input type="email" id="member-input-email" required placeholder="exemplu@email.ro">
+                        </div>
+                        <button type="submit" class="btn-primary btn-block btn-lg mt-2">
+                            <i class="fa-solid fa-id-card"></i> Emite Cardul de Membru
+                        </button>
+                    </form>
+                </div>
+
+                <!-- VEDEREA 2: Cardul de Membru 3D (Afișat DOAR după ce utilizatorul și-a creat cardul) -->
+                <div id="member-card-view" class="hidden">
+                    <p class="text-center section-subtitle">Mișcă cursorul peste card pentru efectul 3D. Punctele se actualizează după fiecare achiziție.</p>
+                    
+                    <div class="card-3d-perspective" id="card-3d-area">
+                        <div class="member-card-3d" id="member-card-element">
+                            <div class="card-glare" id="card-glare"></div>
+                            <div class="card-top-row">
+                                <span class="card-brand">CINEMA <strong>NIII7</strong></span>
+                                <span class="card-tier">MEMBER CARD</span>
+                            </div>
+                            <div class="card-chip-row">
+                                <i class="fa-solid fa-microchip card-chip-icon"></i>
+                                <i class="fa-solid fa-wifi card-nfc-icon"></i>
+                            </div>
+                            <div class="card-bottom-row">
+                                <div class="card-holder-info">
+                                    <span class="card-id" id="card-display-id">ID: N7-00000</span>
+                                    <h3 class="card-holder-name" id="card-display-name">NUME MEMBRU</h3>
+                                    <small class="card-email-sub" id="card-display-email">email@domeniu.ro</small>
+                                </div>
+                                <div class="card-points-badge">
+                                    <span id="member-points-val">0</span> PCT
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="loyalty-stats-grid">
+                        <div class="stat-item">
+                            <span>Rezervări Efectuate</span>
+                            <strong id="member-stat-bookings">0</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span>Produse Bar Achiziționate</span>
+                            <strong id="member-stat-snacks">0</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span>Rată Conversie</span>
+                            <strong class="text-orange">1 PCT / 3 RON</strong>
+                        </div>
+                    </div>
+
+                    <div class="loyalty-progress-box mt-2">
+                        <div class="loyalty-labels">
+                            <span>Progres recompensă: <strong>Meniu Popcorn + Băutură Gratuit (100 PCT)</strong></span>
+                            <span id="loyalty-progress-text">0 / 100 PCT</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill" id="loyalty-progress-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== WIDGET ASISTENT AI CONCIERGE AVANSAT ==================== -->
+    <div class="ai-concierge-widget" id="ai-widget">
+        <button class="ai-toggle-btn" id="ai-toggle-btn">
+            <i class="fa-solid fa-microchip"></i>
+            <span>Asistent AI Concierge NIII7</span>
+            <i class="fa-solid fa-chevron-up" id="ai-chevron"></i>
+        </button>
+
+        <div class="ai-chat-panel hidden" id="ai-chat-panel">
+            <div class="ai-chat-header">
+                <span>Motor Alocare Spațială, Mood-Match & Upsell</span>
+            </div>
             
-            <div class="modal-buttons" style="flex-direction: column;">
-                <button class="btn" id="download-ticket-btn" style="background: linear-gradient(45deg, #00b09b, #96c93d);">⬇️ Descarcă Biletul</button>
-                <button class="btn btn-cancel" id="close-success-btn">Închide</button>
+            <div class="ai-messages-box" id="ai-messages">
+                <div class="ai-msg" id="ai-welcome-msg">
+                    Salut! Pot găsi automat locuri alăturate libere în sală, îți pot recomanda filme după stare sau pot configura rapid meniul de la bar. Scrie-mi mai jos (ex: "3 locuri la Interstellar și un popcorn mare cu sare") sau folosește acțiunile rapide:
+                </div>
             </div>
+
+            <!-- Acțiuni Rapide AI -->
+            <div class="ai-quick-tags">
+                <button class="ai-tag-btn" onclick="triggerAIQuickAction('find_2_seats')">2 Locuri Centru</button>
+                <button class="ai-tag-btn" onclick="triggerAIQuickAction('find_4_seats')">Grup 4 Locuri</button>
+                <button class="ai-tag-btn" onclick="triggerAIQuickAction('mood_imax')">Recomandă IMAX</button>
+                <button class="ai-tag-btn" onclick="triggerAIQuickAction('repeat_last_snack')">Repetă Ultimul Meniu</button>
+            </div>
+
+            <!-- Input Text Hibrid (Keyword Extraction) -->
+            <form id="ai-chat-form" class="ai-input-row">
+                <input type="text" id="ai-user-input" placeholder="Ex: 2 locuri și popcorn mare cu brânză..." autocomplete="off">
+                <button type="submit" class="btn-primary btn-sm"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
         </div>
     </div>
 
-    <div id="admin-view" class="view">
-        <button id="admin-back-btn" class="back-btn">&#8592; Înapoi la site</button>
-        <h2 style="color: #ff0844; margin-bottom: 20px;">Panou Administrator</h2>
-        <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; width: 100%; max-width: 800px;">
-            <h3 style="color: #00f2fe; margin-bottom: 15px;">Vânzări Totale Locale</h3>
-            <p style="font-size: 1.5rem; margin-bottom: 20px;">Încasări: <span id="admin-revenue" style="color: #96c93d; font-weight: bold;">0</span> RON</p>
-            <h3 style="color: #ccc; margin-bottom: 10px;">Bilete Vândute:</h3>
-            <div id="admin-tickets-list" style="max-height: 400px; overflow-y: auto; text-align: left; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 10px;">
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="footer">
+        <div class="container footer-flex">
+            <div class="footer-brand">
+                <span>CINEMA <strong>NIII7</strong> BRAȘOV</span>
+                <p>6 Săli de Proiecție (3 Standard, 2 4DX, 1 IMAX Laser) • Sincronizare Live a Locurilor.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#program">Program</a>
+                <a href="#sectiune-imax">IMAX Sala 6</a>
+                <a href="#sectiune-4dx">Tehnologia 4DX</a>
+                <a href="#roata-norocului">Roata Norocului</a>
+                <a href="#locatie-contact">Harta Brașov</a>
             </div>
         </div>
-    </div>
+    </footer>
 
+    <!-- ==================== LIBRĂRII EXTERNE ȘI SCRIPTURI ==================== -->
+    <!-- Librărie Generare Cod QR Bilet -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Firebase SDK (Realtime Database) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
+    <!-- Logica Principală -->
     <script src="script.js"></script>
 </body>
 </html>

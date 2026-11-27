@@ -15,7 +15,7 @@
 body {
     font-family: 'Montserrat', sans-serif;
     background-color: var(--bg-dark);
-    background-image: 
+    background-image:
         radial-gradient(circle at 50% 0%, rgba(255, 102, 0, 0.14), transparent 45%),
         radial-gradient(circle at 90% 80%, rgba(0, 210, 255, 0.07), transparent 40%);
     background-attachment: fixed;
@@ -608,10 +608,9 @@ body.zooming-in #home-view { transform: scale(1.3); opacity: 0; transition: tran
     to { background-position: -40px 100px; }
 }
 
-/* === STILIZARE MOD LUMINOS (LIGHT THEME) === */
 body.light-mode {
     background-color: #f0f2f5;
-    background-image: 
+    background-image:
         radial-gradient(circle at 50% 0%, rgba(255, 102, 0, 0.08), transparent 45%),
         radial-gradient(circle at 90% 80%, rgba(0, 210, 255, 0.04), transparent 40%);
     color: #1a1a1a;
@@ -624,9 +623,9 @@ body.light-mode .navbar {
 
 body.light-mode .logo { color: #1a1a1a; }
 
-body.light-mode .bg-card, 
-body.light-mode .movie-card, 
-body.light-mode .exp-card, 
+body.light-mode .bg-card,
+body.light-mode .movie-card,
+body.light-mode .exp-card,
 body.light-mode .modal-content,
 body.light-mode .location-section,
 body.light-mode .movie-showcase,
@@ -637,10 +636,10 @@ body.light-mode .admin-dashboard {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 }
 
-body.light-mode .bg-elevated, 
-body.light-mode .weather-widget, 
-body.light-mode .currency-select, 
-body.light-mode .search-box input, 
+body.light-mode .bg-elevated,
+body.light-mode .weather-widget,
+body.light-mode .currency-select,
+body.light-mode .search-box input,
 body.light-mode .filters-container select,
 body.light-mode .booking-options select,
 body.light-mode .legend,
@@ -669,15 +668,14 @@ body.light-mode .hero-title {
     color: #1a1a1a;
 }
 
-body.light-mode .modal input[type="text"], 
-body.light-mode .modal input[type="password"], 
+body.light-mode .modal input[type="text"],
+body.light-mode .modal input[type="password"],
 body.light-mode .modal input[type="email"] {
     background: #f8f9fa;
     color: #1a1a1a;
     border-color: rgba(0, 0, 0, 0.2);
 }
 
-/* === Componente adăugate după unirea celor două versiuni (roată, 4DX, VIP, trailer) în modul luminos === */
 body.light-mode .filter-bar,
 body.light-mode .genre-tab,
 body.light-mode .dx-simulator-box,
@@ -710,7 +708,6 @@ body.light-mode .location-header p,
 body.light-mode .dx-status,
 body.light-mode .reminder-hint { color: #555c6d; }
 
-/* === Butoane calendar + reminder (portate din versiunea lui Adrian, fără dublurile din CSS) === */
 .calendar-buttons { display: flex; gap: 12px; width: 100%; margin-top: 15px; flex-wrap: wrap; }
 .calendar-btn {
     flex: 1; min-width: 150px;
@@ -733,7 +730,6 @@ body.light-mode .calendar-btn { background: #f8f9fa; color: #1a1a1a; border-colo
 body.light-mode .reminder-btn { color: #1e9e57; border-color: #1e9e57; }
 .weather-widget[type="button"], #theme-toggle-btn { cursor: pointer; font-family: inherit; }
 
-/* === Trailer indisponibil === */
 .trailer-fallback {
     width: 100%; min-height: 220px; border-radius: 12px;
     background: var(--bg-elevated); color: var(--text-muted);
@@ -741,23 +737,20 @@ body.light-mode .reminder-btn { color: #1e9e57; border-color: #1e9e57; }
 }
 .trailer-fallback i { font-size: 2.4rem; color: var(--cc-orange); }
 
-/* === Accesibilitate: contur vizibil la navigarea cu tastatura === */
 .seat:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible {
     outline: 3px solid var(--cc-blue);
     outline-offset: 2px;
 }
 
-/* Hero-ul are imagine + gradient închis și în modul luminos => textul rămâne deschis la culoare */
 body.light-mode .hero-title { color: #ffffff; }
 body.light-mode .hero-subtitle { color: #e3e6ee; }
 body.light-mode .movie-card .movie-info { background: #ffffff; }
 
-/* Bannere IMAX / 4DX / VIP: au fundal închis și în modul luminos => text deschis */
 body.light-mode .exp-hero h1,
 body.light-mode .exp-hero p { color: #ffffff; }
 body.light-mode .exp-hero h1 span { color: inherit; }
 body.light-mode .specs-list div { background: #f1f3f6; color: #1a1a1a; border-color: rgba(0, 0, 0, 0.08); }
-/* tab-ul de gen activ / hover rămâne portocaliu (altfel regula pentru modul luminos îl făcea alb pe alb) */
+
 body.light-mode .genre-tab:hover,
 body.light-mode .genre-tab.active {
     background: linear-gradient(90deg, var(--cc-orange), #ff3300);

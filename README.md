@@ -21,7 +21,11 @@ Copiază `.env.example` în `.env.local`. Aplicația funcționează și fără e
 | --- | --- |
 | `VITE_TMDB_API_KEY` | încarcă filmele „now playing” de la TMDB |
 | `VITE_EMAILJS_*` | trimite biletul pe email prin EmailJS (altfel trimiterea este simulată) |
-| `VITE_PUBLIC_URL` | adresa publică folosită în QR-ul de validare (implicit adresa curentă; pentru scanare de pe telefon trebuie să fie accesibilă de pe rețea) |
+| `VITE_PUBLIC_URL` | adresa folosită în QR-ul de validare; are prioritate față de detectarea automată din rețeaua locală |
+
+## Scanarea QR de pe telefon
+
+`npm run dev` și `npm run preview` pornesc serverul accesibil din rețea. Dacă site-ul e deschis pe `localhost`, QR-ul folosește automat adresa IP a calculatorului din rețeaua locală (detectată la pornirea serverului), deci un bilet cumpărat pe PC poate fi scanat cu telefonul conectat la același Wi-Fi și arată „BILET VALID”. Dacă firewall-ul Windows întreabă, permite accesul pe rețele private. Dacă IP-ul detectat nu este cel bun (VPN, mai multe plăci de rețea), setează `VITE_PUBLIC_URL=http://IP:5173` în `.env.local`. Biletele cumpărate înainte de această schimbare păstrează vechiul link.
 
 ## Funcționalități
 

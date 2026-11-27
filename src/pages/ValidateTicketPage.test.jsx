@@ -69,3 +69,18 @@ describe("ValidateTicketPage", () => {
     expect(screen.getByText(payload)).toBeInTheDocument();
   });
 });
+
+describe("adresa din QR", () => {
+  it("înlocuiește localhost cu IP-ul din rețea ca telefonul să poată deschide link-ul", async () => {
+    const { resolveQrOrigin } = await import("../services/api");
+    const local = { protocol: "http:", hostname: "localhost", port: "5173", origin: "http://localhost:5173" };
+
+    expect(resolveQrOrigin({ location: local, lanIp: "192.168.1.20" })).toBe("http://192.168.1.20:5173");
+    expect(resolveQrOrigin({ location: local, lanIp: "" })).toBe("http://localhost:5173");
+    expect(resolveQrOrigin({ location: local, lanIp: "192.168.1.20", publicUrl: "https://cinema.example.ro/" })).toBe(
+      "https://cinema.example.ro"
+    );
+    const remote = { protocol: "http:", hostname: "192.168.1.20", port: "5173", origin: "http://192.168.1.20:5173" };
+    expect(resolveQrOrigin({ location: remote, lanIp: "10.0.0.5" })).toBe("http://192.168.1.20:5173");
+  });
+});

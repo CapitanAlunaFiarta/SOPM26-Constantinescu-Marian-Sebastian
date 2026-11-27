@@ -160,8 +160,23 @@ export async function sendTicketEmail(payload) {
   }
 }
 
+const LOCAL_HOSTNAMES = ["localhost", "127.0.0.1", "[::1]", "::1"];
+
+export function resolveQrOrigin({ publicUrl = "", location, lanIp = "" }) {
+  if (publicUrl) return publicUrl.replace(/\/+$/, "");
+  const { protocol, hostname, port, origin } = location;
+  if (lanIp && LOCAL_HOSTNAMES.includes(hostname)) {
+    return `${protocol}//${lanIp}${port ? `:${port}` : ""}`;
+  }
+  return origin;
+}
+
 export function buildQrValidationUrl({ ticketId, movieTitle, date, time, seats, format }) {
-  const origin = (API_CONFIG.PUBLIC_URL || window.location.origin).replace(/\/+$/, "");
+  const origin = resolveQrOrigin({
+    publicUrl: API_CONFIG.PUBLIC_URL,
+    location: window.location,
+    lanIp: typeof __LAN_IP__ === "string" ? __LAN_IP__ : ""
+  });
   const fields = {
     id: ticketId,
     film: movieTitle,

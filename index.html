@@ -40,6 +40,9 @@
                     <option value="EUR">EUR (€)</option>
                     <option value="USD">USD ($)</option>
                 </select>
+                <button id="theme-toggle-btn" class="weather-widget" type="button" title="Schimbă între modul întunecat și cel luminos" aria-label="Schimbă tema">
+                    <i class="fa-solid fa-moon" id="theme-icon"></i> <span id="theme-label">Dark</span>
+                </button>
                 <button id="my-tickets-btn" class="nav-ticket-btn"><i class="fa-solid fa-ticket"></i> Biletele Mele</button>
             </div>
         </div>
@@ -261,9 +264,13 @@
             </div>
 
             <div class="trailer-container">
-                <video id="movie-trailer" width="100%" controls autoplay>
+                <video id="movie-trailer" width="100%" controls autoplay muted playsinline preload="metadata">
                     Browser-ul tău nu suportă redarea video.
                 </video>
+                <div id="trailer-fallback" class="trailer-fallback" style="display:none;">
+                    <i class="fa-solid fa-film"></i>
+                    <p>Trailerul acestui film nu este disponibil momentan.</p>
+                </div>
             </div>
         </div>
 
@@ -485,6 +492,21 @@
                 </div>
             </div>
             
+            <div class="calendar-buttons">
+                <button type="button" id="add-google-calendar-btn" class="calendar-btn google-cal-btn">
+                    <i class="fa-brands fa-google"></i> Google Calendar
+                </button>
+                <button type="button" id="add-apple-calendar-btn" class="calendar-btn apple-cal-btn">
+                    <i class="fa-solid fa-calendar-plus"></i> Apple / iCal (.ics)
+                </button>
+            </div>
+            <div class="notification-box">
+                <button type="button" id="enable-reminder-btn" class="calendar-btn reminder-btn">
+                    <i class="fa-regular fa-bell"></i> Setează reminder (cu 1h înainte)
+                </button>
+                <small id="reminder-hint" class="reminder-hint">Notificarea apare cât timp site-ul rămâne deschis în browser.</small>
+            </div>
+
             <div class="modal-buttons" style="flex-direction: column; gap: 12px;">
                 <button class="btn-cinema" id="download-ticket-btn"><i class="fa-solid fa-download"></i> DESCARCĂ BILETUL CA POZĂ (.PNG)</button>
                 <button class="btn-cancel" id="close-success-btn">Închide</button>
@@ -502,6 +524,7 @@
             </div>
             <h3>Istoric Bilete Vândute:</h3>
             <div id="admin-tickets-list" class="admin-list"></div>
+            <button type="button" id="admin-reset-btn" class="btn-cancel" style="margin-top:20px;"><i class="fa-solid fa-trash"></i> Resetează datele demo (bilete, încasări, locuri)</button>
         </div>
     </div>
 

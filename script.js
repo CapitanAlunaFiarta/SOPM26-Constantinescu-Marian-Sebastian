@@ -5,6 +5,8 @@ const API_CONFIG = {
     CURRENCY_API: "https://open.er-api.com/v6/latest/RON",
     TIME_API: "https://worldtimeapi.org/api/timezone/Europe/Bucharest",
     SIMULATE_STRIPE_DELAY: 1400,
+    API_TIMEOUT_MS: 4000,        // după atâta timp renunțăm la un API lent și folosim valorile implicite
+    STRICT_CARD_CHECK: false,    // true = cere număr de card valid Luhn (la demo, 16 cifre oarecare sunt acceptate)
     EMAILJS_SERVICE_ID: "YOUR_SERVICE_ID",
     EMAILJS_TEMPLATE_ID: "YOUR_TEMPLATE_ID",
     EMAILJS_PUBLIC_KEY: "YOUR_PUBLIC_KEY"
@@ -14,14 +16,14 @@ let availableDates = [];
 let baseSystemDate = new Date();
 
 const movies = [
-    { id: 1, title: "Dune: Part Two", genre: "Sci-Fi", wiki: "Dune:_Part_Two", imdb: "https://www.imdb.com/title/tt15239678/", format: "IMAX", rating: "9.4", desc: "Paul Atreides se unește cu Chani și fremenii pe calea răzbunării împotriva conspiratorilor care i-au distrus familia.", trailer: "dune.mp4", poster: "media/dune.jpg", times: ["14:00", "16:30", "19:00", "21:30"] },
-    { id: 2, title: "Interstellar", genre: "Sci-Fi", wiki: "Interstellar_(film)", imdb: "https://www.imdb.com/title/tt0816692/", format: "IMAX", rating: "9.2", desc: "O echipă de exploratori călătorește printr-o gaură de vierme în spațiu pentru a asigura supraviețuirea umanității.", trailer: "interstellar.mp4", poster: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", times: ["12:00", "16:30", "18:00", "20:30"] },
-    { id: 3, title: "The Dark Knight", genre: "Acțiune", wiki: "The_Dark_Knight", imdb: "https://www.imdb.com/title/tt0468569/", format: "VIP", rating: "9.5", desc: "Când amenințarea cunoscută sub numele de Joker face ravagii în Gotham, Batman trece prin cel mai mare test.", trailer: "batman_dk.mp4", poster: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_FMjpg_UX1000_.jpg", times: ["14:00", "18:00", "19:00", "21:30"] },
-    { id: 4, title: "Inception", genre: "Thriller", wiki: "Inception", imdb: "https://www.imdb.com/title/tt1375666/", format: "4DX", rating: "9.0", desc: "Un hoț care fură secrete corporative prin tehnologia viselor primește sarcina de a planta o idee în mintea unui CEO.", trailer: "inception.mp4", poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_FMjpg_UX1000_.jpg", times: ["12:00", "14:00", "16:30", "19:00"] },
+    { id: 1, title: "Dune: Part Two", genre: "Sci-Fi", wiki: "Dune:_Part_Two", imdb: "https://www.imdb.com/title/tt15239678/", format: "IMAX", rating: "9.4", desc: "Paul Atreides se unește cu Chani și fremenii pe calea răzbunării împotriva conspiratorilor care i-au distrus familia.", trailer: "media/dune.mp4", poster: "media/dune.jpg", times: ["14:00", "16:30", "19:00", "21:30"] },
+    { id: 2, title: "Interstellar", genre: "Sci-Fi", wiki: "Interstellar_(film)", imdb: "https://www.imdb.com/title/tt0816692/", format: "IMAX", rating: "9.2", desc: "O echipă de exploratori călătorește printr-o gaură de vierme în spațiu pentru a asigura supraviețuirea umanității.", trailer: "media/interstellar.mp4", poster: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", times: ["12:00", "16:30", "18:00", "20:30"] },
+    { id: 3, title: "The Dark Knight", genre: "Acțiune", wiki: "The_Dark_Knight", imdb: "https://www.imdb.com/title/tt0468569/", format: "VIP", rating: "9.5", desc: "Când amenințarea cunoscută sub numele de Joker face ravagii în Gotham, Batman trece prin cel mai mare test.", trailer: "media/batman_dk.mp4", poster: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_FMjpg_UX1000_.jpg", times: ["14:00", "18:00", "19:00", "21:30"] },
+    { id: 4, title: "Inception", genre: "Thriller", wiki: "Inception", imdb: "https://www.imdb.com/title/tt1375666/", format: "4DX", rating: "9.0", desc: "Un hoț care fură secrete corporative prin tehnologia viselor primește sarcina de a planta o idee în mintea unui CEO.", trailer: "media/inception.mp4", poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_FMjpg_UX1000_.jpg", times: ["12:00", "14:00", "16:30", "19:00"] },
     { id: 5, title: "Avatar: The Way of Water", genre: "Sci-Fi", wiki: "Avatar:_The_Way_of_Water", imdb: "https://www.imdb.com/title/tt1630029/", format: "4DX", rating: "8.7", desc: "Jake Sully trăiește cu noua sa familie pe planeta Pandora și luptă pentru a-și proteja tribul în adâncurile oceanului.", trailer: "media/avatar.mp4", poster: "https://m.media-amazon.com/images/M/MV5BYjhiNjBlODctY2ZiOC00YjVlLWFlNzAtNTVhNzM1YjI1NzMxXkEyXkFqcGdeQXVyMjQxNTE1MDA@._V1_FMjpg_UX1000_.jpg", times: ["12:00", "16:30", "18:00", "20:30"] },
-    { id: 6, title: "Oppenheimer", genre: "Biografic", wiki: "Oppenheimer_(film)", imdb: "https://www.imdb.com/title/tt15398776/", format: "IMAX", rating: "9.1", desc: "Povestea fizicianului J. Robert Oppenheimer și rolul său decisiv în dezvoltarea primei bombe atomice.", trailer: "oppenheimer.mp4", poster: "https://m.media-amazon.com/images/M/MV5BMDBmYTZjNjUtN2M1MS00MTQ2LTk2ODgtNzc2M2QyZGE5NTVjXkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_FMjpg_UX1000_.jpg", times: ["14:00", "18:00", "19:00", "21:30"] },
-    { id: 7, title: "Spider-Man: Across the Spider-Verse", genre: "Animație", wiki: "Spider-Man:_Across_the_Spider-Verse", imdb: "https://www.imdb.com/title/tt9362722/", format: "4DX", rating: "9.3", desc: "Miles Morales călătorește prin Multivers, unde întâlnește o nouă echipă de Oameni-Păianjen.", trailer: "spiderman.mp4", poster: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg", times: ["12:00", "14:00", "16:30", "19:00"] },
-    { id: 8, title: "The Batman", genre: "Acțiune", wiki: "The_Batman_(film)", imdb: "https://www.imdb.com/title/tt1877830/", format: "VIP", rating: "8.8", desc: "Când un criminal sadic lasă în urmă indicii criptice, Batman investighează lumea interlopă din Gotham.", trailer: "the_batman.mp4", poster: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg", times: ["16:30", "18:00", "20:30", "21:30"] }
+    { id: 6, title: "Oppenheimer", genre: "Biografic", wiki: "Oppenheimer_(film)", imdb: "https://www.imdb.com/title/tt15398776/", format: "IMAX", rating: "9.1", desc: "Povestea fizicianului J. Robert Oppenheimer și rolul său decisiv în dezvoltarea primei bombe atomice.", trailer: "media/oppenheimer.mp4", poster: "https://m.media-amazon.com/images/M/MV5BMDBmYTZjNjUtN2M1MS00MTQ2LTk2ODgtNzc2M2QyZGE5NTVjXkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_FMjpg_UX1000_.jpg", times: ["14:00", "18:00", "19:00", "21:30"] },
+    { id: 7, title: "Spider-Man: Across the Spider-Verse", genre: "Animație", wiki: "Spider-Man:_Across_the_Spider-Verse", imdb: "https://www.imdb.com/title/tt9362722/", format: "4DX", rating: "9.3", desc: "Miles Morales călătorește prin Multivers, unde întâlnește o nouă echipă de Oameni-Păianjen.", trailer: "media/spiderman.mp4", poster: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg", times: ["12:00", "14:00", "16:30", "19:00"] },
+    { id: 8, title: "The Batman", genre: "Acțiune", wiki: "The_Batman_(film)", imdb: "https://www.imdb.com/title/tt1877830/", format: "VIP", rating: "8.8", desc: "Când un criminal sadic lasă în urmă indicii criptice, Batman investighează lumea interlopă din Gotham.", trailer: "media/the_batman.mp4", poster: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg", times: ["16:30", "18:00", "20:30", "21:30"] }
 ];
 
 const homeView = document.getElementById('home-view');
@@ -52,6 +54,190 @@ let currentCurrency = "RON";
 let forceVipJackpot = false;
 let wheelRotation = 0;
 
+// ============ HELPERI GENERALI ============
+
+// Protecție XSS: orice text venit din localStorage / API trece prin escapeHtml înainte de innerHTML.
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+// localStorage poate arunca erori (mod privat, cotă depășită, JSON corupt) — nu lăsăm site-ul să pice.
+function readStorage(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        return raw === null ? fallback : JSON.parse(raw);
+    } catch (e) {
+        return fallback;
+    }
+}
+function writeStorage(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+}
+
+// Hash FNV-1a (32 biți). Același algoritm este în validare.html.
+// ATENȚIE: sare publică în cod => protejează doar împotriva modificării accidentale a URL-ului,
+// nu împotriva unui atacator. Validarea reală cere un server (vezi README).
+const TICKET_SALT = "niii7-demo-2026";
+function ticketSignature(film, data, ora, locuri, id) {
+    const text = [film, data, ora, locuri, id, TICKET_SALT].join('|');
+    let h = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h.toString(36);
+}
+
+// Verificare număr card cu algoritmul Luhn (activată doar dacă STRICT_CARD_CHECK = true).
+function passesLuhn(num) {
+    let sum = 0, dbl = false;
+    for (let i = num.length - 1; i >= 0; i--) {
+        let d = parseInt(num[i], 10);
+        if (dbl) { d *= 2; if (d > 9) d -= 9; }
+        sum += d;
+        dbl = !dbl;
+    }
+    return sum % 10 === 0;
+}
+
+// ============ DARK / LIGHT MODE ============
+(function setupTheme() {
+    const btn = document.getElementById('theme-toggle-btn');
+    const icon = document.getElementById('theme-icon');
+    const label = document.getElementById('theme-label');
+    if (!btn) return;
+    function apply(isLight) {
+        document.body.classList.toggle('light-mode', isLight);
+        if (icon) icon.className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        if (label) label.innerText = isLight ? 'Light' : 'Dark';
+    }
+    let saved = 'dark';
+    try { saved = localStorage.getItem('cinema_theme') || 'dark'; } catch (e) {}
+    apply(saved === 'light');
+    btn.addEventListener('click', () => {
+        const isLight = !document.body.classList.contains('light-mode');
+        apply(isLight);
+        try { localStorage.setItem('cinema_theme', isLight ? 'light' : 'dark'); } catch (e) {}
+    });
+})();
+
+// ============ CALENDAR (Google + .ics) ============
+const MONTHS_RO = { "Ianuarie": 0, "Februarie": 1, "Martie": 2, "Aprilie": 3, "Mai": 4, "Iunie": 5, "Iulie": 6, "August": 7, "Septembrie": 8, "Octombrie": 9, "Noiembrie": 10, "Decembrie": 11 };
+const CINEMA_LOCATION = "Cinema NIII7, Corpul N, Universitatea Transilvania, Bulevardul Eroilor, Brașov";
+
+// Transformă "Sâmbătă, 28 Noiembrie 2026" + "19:00" într-un obiect Date (ora locală a utilizatorului).
+function parseDateTime(dateStr, timeStr) {
+    const parts = dateStr.split(', ')[1].split(' ');
+    const [hours, minutes] = timeStr.split(':').map(n => parseInt(n, 10));
+    const startDate = new Date(parseInt(parts[2], 10), MONTHS_RO[parts[1]], parseInt(parts[0], 10), hours, minutes);
+    const endDate = new Date(startDate.getTime() + (2 * 60 + 30) * 60 * 1000); // durată estimată 2h30
+    return { startDate, endDate };
+}
+
+function formatICSDate(date) {
+    return date.toISOString().replace(/[-:]|\.\d{3}/g, "");
+}
+
+function icsEscape(text) {
+    return String(text).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+
+function createGoogleCalendarUrl(title, desc, location, startDate, endDate) {
+    const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: `🎬 Cinema NIII7: ${title}`,
+        dates: `${formatICSDate(startDate)}/${formatICSDate(endDate)}`,
+        details: desc,   // newline real; URLSearchParams îl codifică corect
+        location: location
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function downloadICSFile(title, desc, location, startDate, endDate, uid) {
+    const ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Cinema NIII7 Brasov//RO",
+        "CALSCALE:GREGORIAN",
+        "BEGIN:VEVENT",
+        `UID:${uid}@cinema-niii7`,
+        `DTSTAMP:${formatICSDate(new Date())}`,
+        `SUMMARY:${icsEscape('🎬 Cinema NIII7: ' + title)}`,
+        `DESCRIPTION:${icsEscape(desc)}`,
+        `LOCATION:${icsEscape(location)}`,
+        `DTSTART:${formatICSDate(startDate)}`,
+        `DTEND:${formatICSDate(endDate)}`,
+        "BEGIN:VALARM",
+        "ACTION:DISPLAY",
+        "DESCRIPTION:Filmul începe într-o oră",
+        "TRIGGER:-PT1H",
+        "END:VALARM",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ].join("\r\n");
+    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Vizionare_${title.replace(/[^\w]+/g, '_')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ============ REMINDER (Notification API) ============
+// Reminderele sunt salvate în localStorage și reprogramate la reîncărcarea paginii,
+// dar notificarea apare doar cât timp site-ul e deschis (fără server / service worker).
+const reminderTimers = {};
+
+function showReminderNotification(r) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    new Notification("🎬 Cinema NIII7 — reminder", {
+        body: `„${r.movie}" începe la ${r.time} (${r.date}). Pleacă spre Corpul N!`,
+        icon: "https://img.icons8.com/color/96/clapperboard.png"
+    });
+}
+
+function scheduleReminder(r) {
+    const delay = (r.startMs - 60 * 60 * 1000) - Date.now();
+    if (delay < -60 * 60 * 1000 || r.startMs < Date.now()) return false;   // filmul a început deja
+    clearTimeout(reminderTimers[r.id]);
+    reminderTimers[r.id] = setTimeout(() => showReminderNotification(r), Math.max(0, delay));
+    return true;
+}
+
+function restoreReminders() {
+    readStorage('cinema_reminders', []).forEach(scheduleReminder);
+}
+
+function setupPushReminder(ticketId, movieTitle, dateStr, timeStr, startDate) {
+    const btn = document.getElementById('enable-reminder-btn');
+    const hint = document.getElementById('reminder-hint');
+    if (!btn) return;
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-regular fa-bell"></i> Setează reminder (cu 1h înainte)';
+    btn.onclick = async () => {
+        if (!("Notification" in window)) { alert("Browserul tău nu suportă notificări."); return; }
+        let permission = Notification.permission;
+        if (permission === "default") permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            if (hint) hint.innerText = "Ca să primești remindere, permite notificările din setările browserului.";
+            return;
+        }
+        const reminder = { id: ticketId, movie: movieTitle, date: dateStr, time: timeStr, startMs: startDate.getTime() };
+        if (!scheduleReminder(reminder)) {
+            if (hint) hint.innerText = "Filmul a început deja — nu se mai poate seta un reminder.";
+            return;
+        }
+        const all = readStorage('cinema_reminders', []).filter(x => x.id !== ticketId);
+        all.push(reminder);
+        writeStorage('cinema_reminders', all);
+        btn.innerHTML = '<i class="fa-solid fa-check" style="color:#2ecc71;"></i> Reminder setat';
+        btn.disabled = true;
+        if (hint) hint.innerText = "Vei primi o notificare cu o oră înainte, cât timp site-ul este deschis.";
+    };
+}
+
 function buildFutureDates(refDate) {
     const months = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
     const days = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă"];
@@ -69,36 +255,54 @@ function buildFutureDates(refDate) {
     document.getElementById('live-date-label').innerText = `Azi: ${todayStr}`;
 }
 
+// fetch cu timeout, ca un API lent să nu blocheze interfața
+async function fetchJson(url) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), API_CONFIG.API_TIMEOUT_MS);
+    try {
+        const res = await fetch(url, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 async function initLiveAPIs() {
     buildFutureDates(new Date());
-    try {
-        const tRes = await fetch(API_CONFIG.TIME_API);
-        const tData = await tRes.json();
-        if (tData && tData.datetime) {
-            baseSystemDate = new Date(tData.datetime);
-            buildFutureDates(baseSystemDate);
-        }
-    } catch (e) {
-        baseSystemDate = new Date();
-        buildFutureDates(baseSystemDate);
+    // Cele trei API-uri rulează în paralel, iar fiecare are valoare de rezervă dacă pică.
+    const [time, weather, currency] = await Promise.allSettled([
+        fetchJson(API_CONFIG.TIME_API),
+        fetchJson(API_CONFIG.WEATHER_API),
+        fetchJson(API_CONFIG.CURRENCY_API)
+    ]);
+
+    if (time.status === 'fulfilled' && time.value && time.value.datetime) {
+        const apiDate = new Date(time.value.datetime);
+        if (!isNaN(apiDate)) baseSystemDate = apiDate;
     }
-    try {
-        const wRes = await fetch(API_CONFIG.WEATHER_API);
-        const wData = await wRes.json();
-        if (wData.current_weather) {
-            document.getElementById('weather-temp').innerText = `${Math.round(wData.current_weather.temperature)}°C`;
-        }
-    } catch (e) {
-        document.getElementById('weather-temp').innerText = "16°C";
+    const datesBefore = availableDates.join('|');
+    buildFutureDates(baseSystemDate);
+    // dacă API-ul a schimbat datele și o pagină de film e deja deschisă, reîmprospătăm selecția
+    if (datesBefore !== availableDates.join('|') && movieView.classList.contains('active')) {
+        populateBookingOptions(currentMovie);
+        generateSeats();
+        resetSelection();
     }
-    try {
-        const cRes = await fetch(API_CONFIG.CURRENCY_API);
-        const cData = await cRes.json();
-        if (cData && cData.rates) {
-            exchangeRates.EUR = cData.rates.EUR || 0.20;
-            exchangeRates.USD = cData.rates.USD || 0.22;
-        }
-    } catch (e) {}
+
+    const tempEl = document.getElementById('weather-temp');
+    if (weather.status === 'fulfilled' && weather.value && weather.value.current_weather) {
+        tempEl.innerText = `${Math.round(weather.value.current_weather.temperature)}°C`;
+    } else {
+        tempEl.innerText = "16°C";
+    }
+
+    if (currency.status === 'fulfilled' && currency.value && currency.value.rates) {
+        exchangeRates.EUR = currency.value.rates.EUR || exchangeRates.EUR;
+        exchangeRates.USD = currency.value.rates.USD || exchangeRates.USD;
+        updateLegendPrices();
+        updateSelection();
+    }
 }
 
 function updateLegendPrices() {
@@ -173,6 +377,22 @@ document.querySelectorAll('.genre-tab').forEach(tab => {
     });
 });
 
+// Trailerul se încarcă din media/; dacă fișierul lipsește, arătăm un mesaj în loc de un player gol.
+const trailerFallbackEl = document.getElementById('trailer-fallback');
+function loadTrailer(movie) {
+    trailerFallbackEl.style.display = 'none';
+    movieTrailerEl.style.display = '';
+    movieTrailerEl.muted = true;   // browserele blochează autoplay-ul cu sunet
+    movieTrailerEl.src = movie.trailer;
+    movieTrailerEl.load();
+    movieTrailerEl.play().catch(() => {});
+}
+movieTrailerEl.addEventListener('error', () => {
+    if (!movieTrailerEl.getAttribute('src')) return;
+    movieTrailerEl.style.display = 'none';
+    trailerFallbackEl.style.display = 'flex';
+});
+
 function openMoviePage(movie) {
     currentMovie = movie;
     document.body.classList.add('zooming-in');
@@ -187,8 +407,7 @@ function openMoviePage(movie) {
         document.getElementById('imdb-link').href = movie.imdb;
         document.getElementById('letterboxd-link').href = `https://letterboxd.com/search/${encodeURIComponent(movie.title)}/`;
         document.getElementById('wiki-api-box').style.display = 'none';
-        movieTrailerEl.src = movie.trailer;
-        movieTrailerEl.play().catch(e => e);
+        loadTrailer(movie);
         populateBookingOptions(movie);
         applyAuditoriumFormatStyle();
         generateSeats();
@@ -224,12 +443,14 @@ document.getElementById('wiki-api-btn').addEventListener('click', async () => {
     const box = document.getElementById('wiki-api-box');
     box.style.display = 'block';
     box.innerHTML = "Se interoghează Wikipedia REST API...";
+    const requested = currentMovie;   // dacă utilizatorul schimbă filmul cât așteptăm, nu afișăm rezultatul vechi
     try {
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${currentMovie.wiki}`);
-        const data = await res.json();
-        box.innerHTML = `<strong><i class="fa-brands fa-wikipedia-w"></i> Wikipedia Live API:</strong> ${data.extract || currentMovie.desc}`;
+        const data = await fetchJson(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(requested.wiki)}`);
+        if (requested !== currentMovie) return;
+        box.innerHTML = `<strong><i class="fa-brands fa-wikipedia-w"></i> Wikipedia Live API:</strong> ${escapeHtml(data.extract || requested.desc)}`;
     } catch (e) {
-        box.innerHTML = `<strong>Info Live:</strong> ${currentMovie.desc}`;
+        if (requested !== currentMovie) return;
+        box.innerHTML = `<strong>Info Live:</strong> ${escapeHtml(requested.desc)}`;
     }
 });
 
@@ -242,17 +463,30 @@ window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
         showView(adminView);
         renderAdminPanel();
+        return;
     }
-    if (e.key === 'g' || e.key === 'G') {
-        forceVipJackpot = true;
-        const wheelModal = document.getElementById('wheel-modal');
-        if (wheelModal.style.display === 'flex') {
-            spinWheel(true);
-        }
+    // Tasta G (truc de demo pentru jackpot) nu trebuie să se activeze cât se scrie într-un câmp de text,
+    // altfel orice „g" tastat în căutare sau în formularul de plată ar activa jackpotul pe ascuns.
+    const t = e.target;
+    const isTyping = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    if (!isTyping && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'g' || e.key === 'G')) {
+        forceVipJackpot = true;   // armat: următoarea învârtire de roată câștigă jackpotul
+        if (document.getElementById('wheel-modal').style.display === 'flex') spinWheel(true);
     }
 });
 
 document.getElementById('admin-back-btn').addEventListener('click', () => showView(homeView));
+
+// Poster de rezervă (SVG inline) dacă imaginea nu se poate încărca — nu depinde de niciun site extern.
+const POSTER_FALLBACK = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420" viewBox="0 0 300 420">' +
+    '<rect width="300" height="420" fill="#12131a"/><rect x="12" y="12" width="276" height="396" fill="none" stroke="#ff6600" stroke-width="3"/>' +
+    '<text x="150" y="205" font-family="Arial" font-size="26" font-weight="700" fill="#ff6600" text-anchor="middle">CINEMA NIII7</text>' +
+    '<text x="150" y="240" font-family="Arial" font-size="15" fill="#9ba1b0" text-anchor="middle">Poster indisponibil</text></svg>');
+function posterFallback(img) {
+    img.onerror = null;   // evită bucla dacă și fallback-ul ar eșua
+    img.src = POSTER_FALLBACK;
+}
 
 function renderMovies() {
     const selectedTime = document.getElementById('time-filter').value;
@@ -272,7 +506,7 @@ function renderMovies() {
                 <span class="card-format-tag">${movie.format}</span>
                 <span class="card-genre-tag">${movie.genre}</span>
                 <span class="card-rating-tag">★ ${movie.rating}</span>
-                <img src="${movie.poster}" onerror="this.src='https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2JGjjcNs3.jpg'" alt="${movie.title}" loading="lazy">
+                <img src="${escapeHtml(movie.poster)}" onerror="posterFallback(this)" alt="Poster ${escapeHtml(movie.title)}" loading="lazy">
                 <div class="movie-info">
                     <h3>${movie.title}</h3>
                     <div class="time-badges">${timeBadgesHtml}</div>
@@ -409,26 +643,69 @@ function populateBookingOptions(movie) {
 bookingDateSelect.addEventListener('change', () => { generateSeats(); resetSelection(); });
 bookingTimeSelect.addEventListener('change', () => { generateSeats(); resetSelection(); });
 
+// ---- Locuri ocupate: deterministe per proiecție + persistente după cumpărare ----
+// O proiecție = film + dată + oră + sală. Aceeași proiecție arată mereu aceleași locuri ocupate
+// (generator pseudo-aleator cu seed), iar locurile cumpărate rămân ocupate și după reîncărcare.
+function showingKey() {
+    return [currentMovie.id, bookingDateSelect.value, bookingTimeSelect.value, bookingFormatSelect.value].join('|');
+}
+
+function seededRandom(seedStr) {
+    let h = 2166136261;
+    for (let i = 0; i < seedStr.length; i++) {
+        h ^= seedStr.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+    }
+    return function () {   // mulberry32
+        h = (h + 0x6D2B79F5) | 0;
+        let t = Math.imul(h ^ (h >>> 15), 1 | h);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function getBookedSeats(key) {
+    return readStorage('cinema_booked', {})[key] || [];
+}
+
+function bookSeats(key, seatIds) {
+    const all = readStorage('cinema_booked', {});
+    all[key] = Array.from(new Set([...(all[key] || []), ...seatIds]));
+    writeStorage('cinema_booked', all);
+}
+
 function generateSeats() {
     seatsContainer.innerHTML = '';
     const fmt = bookingFormatSelect.value;
     const surcharge = fmt === '4DX' ? 10 : (fmt === 'VIP' ? 15 : 0);
+    const key = showingKey();
+    const rand = seededRandom(key);
+    const booked = getBookedSeats(key);
     for (let r = 0; r < 7; r++) {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'row';
-        let seatClass = r < 2 ? 'standard' : (r < 5 ? 'premium' : 'vip');
-        let basePrice = r < 2 ? 30 : (r < 5 ? 45 : 60);
-        let seatPrice = basePrice + surcharge;
+        rowDiv.setAttribute('role', 'group');
+        rowDiv.setAttribute('aria-label', `Rândul ${r + 1}`);
+        const seatClass = r < 2 ? 'standard' : (r < 5 ? 'premium' : 'vip');
+        const basePrice = r < 2 ? 30 : (r < 5 ? 45 : 60);
+        const seatPrice = basePrice + surcharge;
         for (let c = 0; c < 12; c++) {
             const seat = document.createElement('div');
+            const id = `R${r + 1}L${c + 1}`;
             seat.className = `seat ${seatClass}`;
             seat.dataset.price = seatPrice;
             seat.dataset.row = r + 1;
             seat.dataset.col = c + 1;
-            seat.dataset.id = `R${r+1}L${c+1}`;
-            if (Math.random() < 0.24 && !(r === 3 && (c === 5 || c === 6))) {
-                seat.classList.add('occupied');
-            }
+            seat.dataset.id = id;
+            // rand() se apelează pentru fiecare loc, ca rezultatul să fie stabil; locurile din centru rămân libere
+            const randomlyTaken = rand() < 0.24 && !(r === 3 && (c === 5 || c === 6));
+            const taken = randomlyTaken || booked.includes(id);
+            if (taken) seat.classList.add('occupied');
+            seat.setAttribute('role', 'checkbox');
+            seat.setAttribute('aria-checked', 'false');
+            seat.setAttribute('aria-label', `Rândul ${r + 1}, locul ${c + 1}, ${seatPrice} RON${taken ? ', ocupat' : ''}`);
+            if (taken) seat.setAttribute('aria-disabled', 'true');
+            else seat.tabIndex = 0;
             rowDiv.appendChild(seat);
         }
         seatsContainer.appendChild(rowDiv);
@@ -471,17 +748,25 @@ document.getElementById('ai-sweetspot-btn').addEventListener('click', () => {
     updateSelection();
 });
 
-seatsContainer.addEventListener('click', (e) => {
-    if (e.target.classList.contains('seat') && !e.target.classList.contains('occupied')) {
-        e.target.classList.toggle('selected');
-        const r = parseInt(e.target.dataset.row);
-        const c = parseInt(e.target.dataset.col);
-        update3DScreenPerspective(r, c, false);
-        updateSelection();
+function toggleSeat(seat) {
+    if (!seat.classList.contains('seat') || seat.classList.contains('occupied')) return;
+    seat.classList.toggle('selected');
+    update3DScreenPerspective(parseInt(seat.dataset.row), parseInt(seat.dataset.col), false);
+    updateSelection();
+}
+
+seatsContainer.addEventListener('click', (e) => toggleSeat(e.target));
+
+// Accesibilitate: locurile se pot alege și de la tastatură (Tab + Enter / Space)
+seatsContainer.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleSeat(e.target);
     }
 });
 
 function updateSelection() {
+    document.querySelectorAll('.row .seat').forEach(s => s.setAttribute('aria-checked', s.classList.contains('selected') ? 'true' : 'false'));
     const selected = document.querySelectorAll('.row .seat.selected');
     ticketsTotal = Array.from(selected).reduce((sum, seat) => sum + parseInt(seat.dataset.price), 0);
     const rate = exchangeRates[currentCurrency];
@@ -585,76 +870,138 @@ function isExpiryValid(exp) {
     return true;
 }
 
+function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+}
+
+function flagError(inputId) {
+    const el = document.getElementById(inputId);
+    el.classList.add('error');
+    el.focus();
+}
+
+['email-input', 'card-name'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function () { this.classList.remove('error'); });
+});
+
+let paymentInProgress = false;
+
 document.getElementById('confirm-btn').addEventListener('click', async () => {
+    if (paymentInProgress) return;   // blochează dubla apăsare cât se procesează plata
+
     const email = document.getElementById('email-input').value.trim();
-    if (!email.includes('@')) { alert("Introdu o adresă de email validă!"); return; }
-    if (document.getElementById('card-number').value.length !== 16) { document.getElementById('card-number').classList.add('error'); return; }
-    if (document.getElementById('card-cvv').value.length !== 3) { document.getElementById('card-cvv').classList.add('error'); return; }
-    if (!isExpiryValid(document.getElementById('card-expiry').value)) { 
-        document.getElementById('card-expiry').classList.add('error'); 
+    const cardName = document.getElementById('card-name').value.trim();
+    const cardNumber = document.getElementById('card-number').value;
+
+    if (!isValidEmail(email)) { flagError('email-input'); alert("Introdu o adresă de email validă!"); return; }
+    if (cardName.length < 3) { flagError('card-name'); alert("Introdu numele de pe card."); return; }
+    if (cardNumber.length !== 16 || (API_CONFIG.STRICT_CARD_CHECK && !passesLuhn(cardNumber))) { flagError('card-number'); return; }
+    if (!isExpiryValid(document.getElementById('card-expiry').value)) {
+        document.getElementById('card-expiry').classList.add('error');
         document.getElementById('expiry-error').style.display = 'block';
-        return; 
+        return;
+    }
+    if (document.getElementById('card-cvv').value.length !== 3) { flagError('card-cvv'); return; }
+
+    const selectedEls = Array.from(document.querySelectorAll('.row .seat.selected'));
+    if (selectedEls.length === 0) { alert("Nu ai selectat niciun loc."); return; }
+
+    // Verificăm încă o dată că locurile nu au fost cumpărate între timp (ex.: din alt tab).
+    const key = showingKey();
+    const alreadyBooked = getBookedSeats(key);
+    if (selectedEls.some(s => alreadyBooked.includes(s.dataset.id))) {
+        alert("Unul dintre locurile alese tocmai a fost ocupat. Alege din nou locurile.");
+        paymentModal.style.display = 'none';
+        generateSeats();
+        resetSelection();
+        return;
     }
 
-    const selectedSeats = Array.from(document.querySelectorAll('.row .seat.selected')).map(s => s.dataset.id).join(', ');
+    const seatIds = selectedEls.map(s => s.dataset.id);
+    const selectedSeats = seatIds.join(', ');
     const date = bookingDateSelect.value;
     const time = bookingTimeSelect.value;
     const fmt = bookingFormatSelect.value;
-    let snacksStr = [];
-    if (document.getElementById('snack-popcorn').value > 0) snacksStr.push(document.getElementById('snack-popcorn').value + "x Popcorn");
-    if (document.getElementById('snack-nachos').value > 0) snacksStr.push(document.getElementById('snack-nachos').value + "x Nachos");
-    if (document.getElementById('snack-soda').value > 0) snacksStr.push(document.getElementById('snack-soda').value + "x Suc");
-    let snacksText = snacksStr.length > 0 ? "Bar & Snacks: " + snacksStr.join(', ') : "";
+    const movie = currentMovie;
+
+    const snackParts = [];
+    [['snack-popcorn', 'Popcorn'], ['snack-nachos', 'Nachos'], ['snack-soda', 'Suc']].forEach(([id, label]) => {
+        const n = parseInt(document.getElementById(id).value) || 0;
+        if (n > 0) snackParts.push(`${n}x ${label}`);
+    });
+    const snacksText = snackParts.length ? "Bar & Snacks: " + snackParts.join(', ') : "";
 
     const btn = document.getElementById('confirm-btn');
+    paymentInProgress = true;
+    btn.disabled = true;
     btn.innerText = "SE PROCESEAZĂ...";
     btn.classList.add('loading');
     await new Promise(r => setTimeout(r, API_CONFIG.SIMULATE_STRIPE_DELAY));
 
-    let currentUrl = window.location.href;
-    let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-    if (baseUrl.endsWith('.html')) {
-        baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
-    }
-    const validateUrl = `${baseUrl}/validare.html?film=${encodeURIComponent(currentMovie.title + " (" + fmt + ")")}&data=${encodeURIComponent(date)}&ora=${encodeURIComponent(time)}&locuri=${encodeURIComponent(selectedSeats)}`;
+    // ID unic de bilet + QR care duce la pagina de validare, cu semnătură
+    const ticketId = Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const filmLabel = `${movie.title} (${fmt})`;
+    const vUrl = new URL('validare.html', window.location.href);
+    vUrl.search = new URLSearchParams({
+        film: filmLabel, data: date, ora: time, locuri: selectedSeats, id: ticketId,
+        sig: ticketSignature(filmLabel, date, time, selectedSeats, ticketId)
+    }).toString();
+    const validateUrl = vUrl.toString();
     const qrUrl = `${API_CONFIG.QR_API_URL}${encodeURIComponent(validateUrl)}`;
+    const price = Math.round(finalTotal * 100) / 100;
 
     document.getElementById('qr-code-img').src = qrUrl;
     document.getElementById('ticket-format-badge').innerText = `${fmt} PASS`;
-    document.getElementById('ticket-movie-name').innerText = currentMovie.title;
+    document.getElementById('ticket-movie-name').innerText = movie.title;
     document.getElementById('ticket-datetime').innerText = `${date} | Ora ${time}`;
     document.getElementById('ticket-seats-info').innerText = `LOCURI (${fmt}): ${selectedSeats}`;
     document.getElementById('ticket-snacks-info').innerText = snacksText;
 
-    saveTicketToLocal(`${currentMovie.title} [${fmt}]`, date, time, selectedSeats, qrUrl, finalTotal);
+    bookSeats(key, seatIds);   // locurile rămân ocupate și după reîncărcarea paginii
+    saveTicketToLocal({ id: ticketId, movie: `${movie.title} [${fmt}]`, date, time, seats: selectedSeats, qrUrl, validateUrl, price });
+
+    // Calendar + reminder pentru biletul curent
+    const { startDate, endDate } = parseDateTime(date, time);
+    const calTitle = `${movie.title} (${fmt})`;
+    const calDesc = `Bilet Cinema NIII7 Brașov\nLocuri: ${selectedSeats}\nFormat: ${fmt}\nBilet: ${ticketId}\nVizionare plăcută!`;
+    document.getElementById('add-google-calendar-btn').onclick = () =>
+        window.open(createGoogleCalendarUrl(calTitle, calDesc, CINEMA_LOCATION, startDate, endDate), '_blank', 'noopener');
+    document.getElementById('add-apple-calendar-btn').onclick = () =>
+        downloadICSFile(calTitle, calDesc, CINEMA_LOCATION, startDate, endDate, ticketId);
+    setupPushReminder(ticketId, movie.title, date, time, startDate);
+    document.getElementById('reminder-hint').innerText = "Notificarea apare cât timp site-ul rămâne deschis în browser.";
 
     if ('speechSynthesis' in window) {
-        const msg = new SpeechSynthesisUtterance(`Rezervare confirmată la Cinema N 3 7 în sala ${fmt} pentru filmul ${currentMovie.title}. Vizionare plăcută!`);
+        const msg = new SpeechSynthesisUtterance(`Rezervare confirmată la Cinema N 3 7 în sala ${fmt} pentru filmul ${movie.title}. Vizionare plăcută!`);
         msg.lang = 'ro-RO';
         window.speechSynthesis.speak(msg);
     }
 
-    try {
-        emailjs.init(API_CONFIG.EMAILJS_PUBLIC_KEY); 
-        emailjs.send(API_CONFIG.EMAILJS_SERVICE_ID, API_CONFIG.EMAILJS_TEMPLATE_ID, {
-            to_email: email, 
-            movie: `${currentMovie.title} (${fmt})`, 
-            date: date, 
-            time: time, 
-            seats: selectedSeats,
-            qr_link: qrUrl
-        });
-    } catch(e) {}
+    // EmailJS se apelează doar dacă s-au configurat cheile reale (altfel ar eșua silențios)
+    if (typeof emailjs !== 'undefined' && !API_CONFIG.EMAILJS_PUBLIC_KEY.startsWith('YOUR_')) {
+        try {
+            emailjs.init(API_CONFIG.EMAILJS_PUBLIC_KEY);
+            emailjs.send(API_CONFIG.EMAILJS_SERVICE_ID, API_CONFIG.EMAILJS_TEMPLATE_ID, {
+                to_email: email, movie: filmLabel, date, time, seats: selectedSeats, qr_link: qrUrl
+            }).catch(() => {});
+        } catch (e) {}
+    }
 
+    // Nu păstrăm datele cardului în pagină după plată
+    ['card-number', 'card-cvv', 'card-expiry', 'card-name'].forEach(id => { document.getElementById(id).value = ''; });
+
+    paymentInProgress = false;
+    btn.disabled = false;
     btn.innerText = "CONFIRMĂ PLATA";
     btn.classList.remove('loading');
     document.getElementById('payment-form-content').style.display = 'none';
     document.getElementById('ticket-success-content').style.display = 'block';
-    document.querySelectorAll('.row .seat.selected').forEach(s => { s.classList.remove('selected'); s.classList.add('occupied'); });
+    generateSeats();     // redesenează sala, cu locurile cumpărate acum marcate ca ocupate
     resetSelection();
 });
 
 document.getElementById('download-ticket-btn').addEventListener('click', () => {
+    if (typeof html2canvas === 'undefined') { alert("Biblioteca de export nu s-a încărcat (verifică conexiunea la internet)."); return; }
     const ticketDiv = document.getElementById('ticket-to-download');
     html2canvas(ticketDiv, { backgroundColor: '#0b0c10', scale: 2, useCORS: true }).then(canvas => {
         const link = document.createElement('a');
@@ -666,36 +1013,36 @@ document.getElementById('download-ticket-btn').addEventListener('click', () => {
 
 document.getElementById('close-success-btn').addEventListener('click', () => paymentModal.style.display = 'none');
 
-function saveTicketToLocal(movie, date, time, seats, qrUrl, price) {
-    let tickets = JSON.parse(localStorage.getItem('cinema_tickets')) || [];
-    tickets.push({ id: Date.now(), movie, date, time, seats, qrUrl, price });
-    localStorage.setItem('cinema_tickets', JSON.stringify(tickets));
-    let adminRev = parseFloat(localStorage.getItem('cinema_revenue') || 0);
-    localStorage.setItem('cinema_revenue', adminRev + price);
+function saveTicketToLocal(ticket) {
+    const tickets = readStorage('cinema_tickets', []);
+    tickets.push(ticket);
+    writeStorage('cinema_tickets', tickets);
+    const revenue = parseFloat(readStorage('cinema_revenue', 0)) || 0;
+    writeStorage('cinema_revenue', Math.round((revenue + ticket.price) * 100) / 100);
 }
 
 function renderMyTickets() {
     const container = document.getElementById('tickets-history-container');
     container.innerHTML = '';
-    const tickets = JSON.parse(localStorage.getItem('cinema_tickets')) || [];
+    const tickets = readStorage('cinema_tickets', []);
     if (tickets.length === 0) {
         container.innerHTML = "<p style='color:#9ba1b0;'>Nu ai niciun bilet activ în acest moment.</p>";
         return;
     }
-    tickets.reverse().forEach(t => {
+    tickets.slice().reverse().forEach(t => {
         const div = document.createElement('div');
         div.className = 'vip-ticket-pass';
         div.style.width = '310px';
         div.innerHTML = `
             <div class="ticket-top"><span>CINEMA <b>NIII7</b></span><span>PASS</span></div>
             <div class="ticket-body">
-                <h3 style="font-size:1.35rem;">${t.movie}</h3>
-                <p class="ticket-meta">${t.date} | ${t.time}</p>
-                <div class="ticket-seats-box">Locuri: ${t.seats}</div>
+                <h3 style="font-size:1.35rem;">${escapeHtml(t.movie)}</h3>
+                <p class="ticket-meta">${escapeHtml(t.date)} | ${escapeHtml(t.time)}</p>
+                <div class="ticket-seats-box">Locuri: ${escapeHtml(t.seats)}</div>
             </div>
             <div class="ticket-divider"></div>
             <div class="ticket-bottom">
-                <div class="qr-container"><img src="${t.qrUrl}" style="width:110px; height:110px; display:block;"></div>
+                <div class="qr-container"><img src="${escapeHtml(t.qrUrl)}" alt="QR bilet ${escapeHtml(t.movie)}" style="width:110px; height:110px; display:block;"></div>
             </div>
         `;
         container.appendChild(div);
@@ -703,18 +1050,32 @@ function renderMyTickets() {
 }
 
 function renderAdminPanel() {
-    const rev = parseFloat(localStorage.getItem('cinema_revenue') || 0);
+    const rev = parseFloat(readStorage('cinema_revenue', 0)) || 0;
     document.getElementById('admin-revenue').innerText = rev.toFixed(2);
     const list = document.getElementById('admin-tickets-list');
     list.innerHTML = '';
-    const tickets = JSON.parse(localStorage.getItem('cinema_tickets')) || [];
-    tickets.reverse().forEach(t => {
+    const tickets = readStorage('cinema_tickets', []);
+    if (tickets.length === 0) {
+        list.innerHTML = "<p style='color:#9ba1b0; padding:12px 0;'>Niciun bilet vândut încă.</p>";
+        return;
+    }
+    tickets.slice().reverse().forEach(t => {
         list.innerHTML += `<div style="border-bottom: 1px solid #25262b; padding: 12px 0; text-align:left;">
-            <strong style="color:#ff6600; font-size:1.1rem;">${t.movie}</strong> — ${t.date} (${t.time}) <br>
-            <span style="color:#9ba1b0;">Locuri: ${t.seats} | Total încasat: <b>${t.price} RON</b></span>
+            <strong style="color:#ff6600; font-size:1.1rem;">${escapeHtml(t.movie)}</strong> — ${escapeHtml(t.date)} (${escapeHtml(t.time)}) <br>
+            <span style="color:#9ba1b0;">Locuri: ${escapeHtml(t.seats)} | Total încasat: <b>${escapeHtml(t.price)} RON</b></span>
         </div>`;
     });
 }
 
+document.getElementById('admin-reset-btn').addEventListener('click', () => {
+    if (!confirm("Ștergi toate biletele, încasările, locurile cumpărate și reminderele demo?")) return;
+    ['cinema_tickets', 'cinema_revenue', 'cinema_booked', 'cinema_reminders'].forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) {}
+    });
+    Object.values(reminderTimers).forEach(clearTimeout);
+    renderAdminPanel();
+});
+
 renderMovies();
+restoreReminders();
 initLiveAPIs();

@@ -8,35 +8,76 @@
     <style>
         body { font-family: 'Montserrat', sans-serif; background-color: #070709; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px; }
         .valid-box { background: #12131a; border-top: 6px solid #2ecc71; padding: 40px; border-radius: 16px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9); }
+        .valid-box.invalid { border-top-color: #ff3b30; }
         .valid-icon { font-size: 70px; margin-bottom: 15px; }
-        h1 { font-family: 'Oswald', sans-serif; color: #2ecc71; font-size: 2.4rem; letter-spacing: 2px; margin: 0 0 15px 0; }
+        h1 { font-family: 'Oswald', sans-serif; color: #2ecc71; font-size: 2.2rem; letter-spacing: 2px; margin: 0 0 15px 0; }
+        .invalid h1 { color: #ff3b30; }
         .details { font-size: 1.1rem; line-height: 1.8; color: #9ba1b0; border-top: 1px solid #25262b; padding-top: 20px; }
-        .highlight { color: #fff; font-weight: 800; }
-        .seats-pill { background: #ff6600; color: #000; font-weight: 800; font-size: 1.3rem; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-top: 15px; }
+        .details p { margin: 6px 0; }
+        .highlight { color: #fff; font-weight: 800; word-break: break-word; }
+        .seats-pill { background: #ff6600; color: #000; font-weight: 800; font-size: 1.3rem; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-top: 15px; word-break: break-word; }
+        .note { margin-top: 18px; font-size: 0.78rem; color: #6c7283; }
     </style>
 </head>
 <body>
     <div class="valid-box" id="result-box">
-        <div class="valid-icon">✅</div>
-        <h1>BILET VALID — ACCES PERMIS</h1>
-        <div class="details" id="ticket-details">Se verifică datele...</div>
+        <div class="valid-icon" id="icon">⏳</div>
+        <h1 id="title">Se verifică...</h1>
+        <div class="details" id="ticket-details"></div>
+        <div class="note" id="note"></div>
     </div>
     <script>
+        // Aceeași funcție ca în script.js (ticketSignature) — trebuie păstrate identice.
+        const TICKET_SALT = "niii7-demo-2026";
+        function ticketSignature(film, data, ora, locuri, id) {
+            const text = [film, data, ora, locuri, id, TICKET_SALT].join('|');
+            let h = 0x811c9dc5;
+            for (let i = 0; i < text.length; i++) {
+                h ^= text.charCodeAt(i);
+                h = Math.imul(h, 0x01000193) >>> 0;
+            }
+            return h.toString(36);
+        }
+
+        // Toate valorile din URL sunt puse în pagină cu textContent (nu innerHTML) => fără XSS.
+        function addLine(parent, label, value) {
+            const p = document.createElement('p');
+            p.append(label + ' ');
+            const span = document.createElement('span');
+            span.className = 'highlight';
+            span.textContent = value;
+            p.appendChild(span);
+            parent.appendChild(p);
+        }
+
+        function showResult(ok, title, icon) {
+            document.getElementById('result-box').classList.toggle('invalid', !ok);
+            document.getElementById('title').textContent = title;
+            document.getElementById('icon').textContent = icon;
+        }
+
         const params = new URLSearchParams(window.location.search);
-        if (params.has('film')) {
-            const film = params.get('film');
-            const data = params.get('data');
-            const ora = params.get('ora');
-            const locuri = params.get('locuri');
-            document.getElementById('ticket-details').innerHTML = `
-                <p>FILM: <span class="highlight">${film}</span></p>
-                <p>DATA: <span class="highlight">${data}</span></p>
-                <p>ORA: <span class="highlight">${ora}</span></p>
-                <div class="seats-pill">LOCURI: ${locuri}</div>
-            `;
+        const film = params.get('film'), data = params.get('data'), ora = params.get('ora');
+        const locuri = params.get('locuri'), id = params.get('id'), sig = params.get('sig');
+        const details = document.getElementById('ticket-details');
+
+        if (!film || !data || !ora || !locuri || !id || !sig) {
+            showResult(false, 'BILET INVALID', '❌');
+            details.textContent = 'Acest cod QR nu conține toate datele unui bilet Cinema NIII7.';
+        } else if (ticketSignature(film, data, ora, locuri, id) !== sig) {
+            showResult(false, 'BILET INVALID — DATE MODIFICATE', '❌');
+            details.textContent = 'Semnătura biletului nu corespunde datelor din link. Biletul a fost modificat sau nu este emis de Cinema NIII7.';
         } else {
-            document.getElementById('result-box').innerHTML = `<div class="valid-icon">❌</div><h1 style="color:#ff3b30;">BILET INVALID</h1><p style="color:#9ba1b0;">Acest cod QR nu figurează în baza de date Cinema NIII7.</p>`;
-            document.getElementById('result-box').style.borderTopColor = '#ff3b30';
+            showResult(true, 'BILET VALID — ACCES PERMIS', '✅');
+            addLine(details, 'FILM:', film);
+            addLine(details, 'DATA:', data);
+            addLine(details, 'ORA:', ora);
+            addLine(details, 'BILET:', id);
+            const pill = document.createElement('div');
+            pill.className = 'seats-pill';
+            pill.textContent = 'LOCURI: ' + locuri;
+            details.appendChild(pill);
+            document.getElementById('note').textContent = 'Verificare demonstrativă (semnătură în browser). Într-un sistem real, validarea se face pe un server.';
         }
     </script>
 </body>
